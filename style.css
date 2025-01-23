@@ -1,0 +1,265 @@
+body {
+    background-image: url('https://img.freepik.com/free-vector/abstract-technological-background_23-2148897676.jpg;');
+    background-size: cover;
+    margin: 0;
+    height: 100vh;
+    
+}
+
+
+  
+.W{
+    color: gainsboro;
+}
+
+
+
+header {
+    background-color: white; /* กำหนดสีพื้นหลัง */
+    padding: 10px 20px; /* ระยะห่างภายใน */
+    display: flex; /* ใช้ Flexbox */
+    justify-content: space-between; /* กระจายโลโก้, ชื่อ และเมนู */
+    align-items: center; /* จัดแนวกลางในแนวตั้ง */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* เพิ่มเงาบางๆ */
+    border-bottom: 2px solid #eaeaea; /* เส้นขอบด้านล่าง */
+    position: fixed; /* ทำให้แถบค้างอยู่ด้านบน */
+    top: 0;
+    left: 50%; /* เริ่มต้นจากกลางหน้าจอ */
+    transform: translateX(-50%); /* ดันแถบกลับไปให้ตรงกลาง */
+    width: 80%; /* กำหนดความกว้าง */
+    z-index: 1000; /* ทำให้แถบอยู่ด้านบนสุด */
+    border-radius: 20px; /* ทำมุมโค้ง */
+    margin: 20px 0; /* ระยะห่างด้านบน */
+}
+
+.logo img {
+    width: 50px; /* ขนาดโลโก้ */
+    height: auto; /* รักษาสัดส่วน */
+    margin-right: 10px; /* ระยะห่างจากข้อความ */
+}
+
+.site-name {
+    flex: 1; /* ใช้พื้นที่ที่เหลืออยู่ */
+    text-align: center; /* จัดข้อความให้อยู่กลาง */
+    font-size: 75%; /* ปรับขนาดตัวอักษร */
+    font-weight: bold;
+}
+
+.cl {
+    background-color: #f0f8ff; /* สีพื้นหลัง */
+    padding: 8px 12px; /* ระยะห่างภายใน */
+    border-radius: 8px; /* ทำมุมโค้ง */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* เพิ่มเงา */
+    text-align: center; /* จัดข้อความให้อยู่กลาง */
+    font-size: 12px; /* ขนาดตัวอักษร */
+    font-weight: bold;
+}
+
+.cl a {
+    text-decoration: none; /* ลบเส้นใต้ */
+    color: #007bff; /* สีของลิงก์ */
+}
+
+.cl a:hover {
+    color: #0056b3; /* เปลี่ยนสีเมื่อ hover */
+}
+
+
+
+/* แอเรียสำหรับพื้นที่การอัปโหลด */
+.upload-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 5% auto; /* ตั้งระยะห่างด้านบนและจัดให้อยู่กึ่งกลาง */
+    padding: 20px; /* เพิ่มพื้นที่รอบคอนเทนเนอร์ */
+    max-width: 1200px; /* จำกัดความกว้างสูงสุด */
+    box-sizing: border-box; /* รวม padding ในขนาดขององค์ประกอบ */
+}
+
+.upload-area {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    border: 2px dashed #ccc;
+    border-radius: 15px;
+    width: 100%;
+    max-width: 90%; /* จำกัดความกว้างสูงสุด */
+    min-height: 200px; /* เพิ่มความสูงขั้นต่ำเพื่อความสมดุล */
+    background-color: #f9f9f9;
+    cursor: pointer;
+    transition: background-color 0.3s, border-color 0.3s;
+    position: relative;
+    padding: 20px; /* เพิ่ม padding รอบพื้นที่อัปโหลด */
+    margin: 0 auto; /* จัดพื้นที่อัปโหลดให้อยู่กึ่งกลาง */
+}
+
+.upload-area:hover {
+    background-color: #f1f1f1;
+    border-color: #007bff;
+    align-items: center;
+}
+
+.image-wrapper {
+    position: relative;
+    margin: 10px;
+}
+
+.image-wrapper img {
+    max-width: 100px;
+    max-height: 100px;
+    border: 2px solid #ccc;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s;
+}
+
+.image-wrapper img:hover {
+    transform: scale(1.1);
+}
+
+.image-wrapper .delete-btn {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background: #ff0000;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s;
+}
+
+.image-wrapper .delete-btn:hover {
+    transform: scale(1.2);
+}
+
+#upload-text {
+    font-size: 18px;
+    color: #007bff;
+    font-weight: bold;
+    text-align: center;
+    width: 100%;
+    margin-top: 20px;
+}
+
+.upload-input {
+    display: none;
+}
+
+
+
+
+/*popup*/
+.overlay {
+    display: none; /* ซ่อนตอนเริ่มต้น */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5); /* พื้นหลังโปร่งแสง */
+    z-index: 9999; /* ให้อยู่ด้านบน */
+    backdrop-filter: blur(5px); /* ทำให้พื้นหลังเบลอ */
+}
+
+/* Popup Window */
+.popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%; /* ใช้เปอร์เซ็นต์เพื่อความยืดหยุ่น */
+    max-width: 400px;
+    padding: 20px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    text-align: left;
+    z-index: 1000; /* ให้อยู่ด้านบนสุด */
+}
+
+/* Close Button */
+.close-btn {
+    display: inline-block;
+    margin-top: 15px;
+    padding: 10px 20px;
+    background: #007bff;
+    color: white;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.close-btn:hover {
+    background: #0056b3;
+}
+
+/* Popup Text */
+.popup h2 {
+    margin-top: 0;
+    font-size: 20px;
+    color: #333;
+}
+
+.popup p {
+    font-size: 16px;
+    line-height: 1.5;
+    margin-bottom: 10px;
+    color: #555;
+}
+
+
+
+
+
+
+
+
+/* main */
+.editor-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 50px;
+}
+
+.upload-section {
+    margin-bottom: 20px;
+}
+
+#image-editor {
+    border: 2px solid #ccc;
+    border-radius: 10px;
+    background-color: #f9f9f9;
+}
+
+.editor-controls {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+}
+
+button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
