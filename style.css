@@ -30,7 +30,30 @@ header {
     z-index: 1000; /* ทำให้แถบอยู่ด้านบนสุด */
     border-radius: 20px; /* ทำมุมโค้ง */
     margin: 20px 0; /* ระยะห่างด้านบน */
+    font-size: 16px; /* ขนาดตัวอักษรเริ่มต้น */
 }
+
+@media (max-width: 768px) {
+    header {
+        padding: 8px 15px; /* ลดระยะห่างภายใน */
+        font-size: 14px; /* ลดขนาดตัวอักษร */
+        width: 90%; /* ขยายความกว้าง */
+        margin: 10px 0; /* ลดระยะห่างด้านบน */
+        border-radius: 15px; /* ลดมุมโค้ง */
+    }
+    
+}
+
+@media (max-width: 480px) {
+    header {
+        padding: 6px 10px; /* ลดระยะห่างภายในอีก */
+        font-size: 12px; /* ลดขนาดตัวอักษรสำหรับหน้าจอเล็ก */
+        width: 95%; /* ขยายให้เต็มพื้นที่มากขึ้น */
+        margin: 5px 0; /* ลดระยะห่างด้านบนอีก */
+        border-radius: 10px; /* ลดมุมโค้งให้น้อยที่สุด */
+    }
+}
+
 
 .logo img {
     width: 50px; /* ขนาดโลโก้ */
@@ -71,7 +94,7 @@ header {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin: 5% auto; /* ตั้งระยะห่างด้านบนและจัดให้อยู่กึ่งกลาง */
+    margin: 9% auto; /* ตั้งระยะห่างด้านบนและจัดให้อยู่กึ่งกลาง */
     padding: 20px; /* เพิ่มพื้นที่รอบคอนเทนเนอร์ */
     max-width: 1200px; /* จำกัดความกว้างสูงสุด */
     box-sizing: border-box; /* รวม padding ในขนาดขององค์ประกอบ */
@@ -154,6 +177,7 @@ header {
 .upload-input {
     display: none;
 }
+
 
 
 

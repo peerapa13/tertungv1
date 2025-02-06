@@ -1,5 +1,16 @@
- // ฟังก์ชันแสดง popup ตอนโหลดหน้า
- window.onload = function() {
+// ฟังก์ชันสำหรับแสดง popup ตอนโหลดหน้า
+window.onload = function() {
+    // ตรวจสอบว่า popup แสดงไปแล้วหรือยัง
+    if (!localStorage.getItem('popupShown')) {
+        // ถ้ายังไม่แสดง popup, แสดง popup
+        document.getElementById('popupOverlay').style.display = 'block';
+
+        // ตั้งค่าใน localStorage ว่ากล่อง popup แสดงแล้ว
+        localStorage.setItem('popupShown', 'true');
+    }
+};
+
+function showPopup() {
     document.getElementById('popupOverlay').style.display = 'block';
 };
 
@@ -8,106 +19,106 @@ function closePopup() {
     document.getElementById('popupOverlay').style.display = 'none';
 }
 
-function showPopup() {
-document.getElementById('popupOverlay').style.display = 'block';
-}
+// ฟังก์ชันอัปโหลดภาพไปยัง Cloudinary
+async function uploadToCloudinary(file) {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", "imgweb"); // ใช้ Upload Preset
 
-// ฟังก์ชันปิด Popup
-function closePopup() {
-document.getElementById('popupOverlay').style.display = 'none';
-}
-
-
-// ฟังก์ชันสำหรับแสดงภาพ
-const uploadArea = document.getElementById("upload-area");
-const fileInput = document.getElementById("file-input");
-function displayImage(file) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        const imageWrapper = document.createElement("div");
-        imageWrapper.classList.add("image-wrapper");
-
-        const img = document.createElement("img");
-        img.src = e.target.result;
-
-        const deleteBtn = document.createElement("button");
-        deleteBtn.classList.add("delete-btn");
-        deleteBtn.innerHTML = "×";
-
-        deleteBtn.addEventListener("click", (event) => {
-            event.stopPropagation();
-            uploadArea.removeChild(imageWrapper);
+    try {
+        const response = await fetch("https://api.cloudinary.com/v1_1/dmdhq3u7b/image/upload", {
+            method: "POST",
+            body: formData
         });
 
-        imageWrapper.appendChild(img);
-        imageWrapper.appendChild(deleteBtn);
-        uploadArea.appendChild(imageWrapper);
-    };
-    reader.readAsDataURL(file);
+        const data = await response.json();
+        console.log(data);
+        return { 
+            imageUrl: data.secure_url,  // URL รูปภาพที่อัปโหลด
+            publicId: data.public_id    // ID สำหรับใช้ลบภาพ
+        };
+    } catch (error) {
+        console.error("Upload failed:", error);
+        alert("เกิดข้อผิดพลาดในการอัปโหลด กรุณาลองใหม่");
+        return null;
+    }
+}
+
+// ฟังก์ชันแสดงภาพที่อัปโหลด
+async function displayImage(file) {
+    const uploadedData = await uploadToCloudinary(file);
+    if (!uploadedData) return;
+
+    // แสดงภาพที่อัปโหลดในหน้า
+    const imageWrapper = document.createElement("div");
+    imageWrapper.classList.add("image-wrapper");
+
+    const img = document.createElement("img");
+    img.src = uploadedData.imageUrl; // ใช้ URL จาก Cloudinary
+
+    const deleteBtn = document.createElement("button");
+    deleteBtn.classList.add("delete-btn");
+    deleteBtn.innerHTML = "×";
+
+    // เพิ่มฟังก์ชันลบภาพจาก Cloudinary
+    deleteBtn.addEventListener("click", async (event) => {
+        event.stopPropagation();
+        uploadArea.removeChild(imageWrapper);
+
+        // ลบภาพออกจาก Cloudinary
+        await deleteFromCloudinary(uploadedData.publicId);
+    });
+
+    imageWrapper.appendChild(img);
+    imageWrapper.appendChild(deleteBtn);
+    uploadArea.appendChild(imageWrapper);
+}
+
+// ฟังก์ชันลบภาพจาก Cloudinary โดยใช้ public_id
+async function deleteFromCloudinary(publicId) {
+    try {
+        const response = await fetch(`https://api.cloudinary.com/v1_1/dmdhq3u7b/image/destroy`, {
+            method: "POST",
+            body: JSON.stringify({ public_id: publicId }), // ส่ง public_id ที่ได้รับจากการอัปโหลด
+            headers: { 
+                "Content-Type": "application/json" 
+            }
+        });
+
+        const data = await response.json();
+        if (data.result === 'ok') {
+            alert('ลบภาพสำเร็จ!');
+        } else {
+            alert('เกิดข้อผิดพลาดในการลบภาพ');
+        }
+    } catch (error) {
+        console.error("Delete failed:", error);
+        alert("เกิดข้อผิดพลาดในการลบภาพ");
+    }
 }
 
 // การจัดการเมื่อคลิกพื้นที่อัปโหลด
+const uploadArea = document.getElementById("upload-area");
+const fileInput = document.getElementById("file-input");
+
 uploadArea.addEventListener("click", (event) => {
     if (event.target === uploadArea) {
-        fileInput.click();
+        fileInput.click(); // เปิด input file เมื่อคลิกที่ uploadArea
     }
 });
 
 // การจัดการเมื่อเลือกไฟล์ผ่าน input
 fileInput.addEventListener("change", (e) => {
     const files = e.target.files;
-
     Array.from(files).forEach((file) => {
-        if (file.type.startsWith("image/")) {
-            displayImage(file);
-        }
+        displayImage(file);
     });
 });
 
+/* ปุ่มแก้ไข */
+document.getElementById('edit-button').addEventListener('click', () => {
+    // เปลี่ยนไปยังหน้า main.html
+    window.location.href = './main.html';
 
-/*ปุ่มแก้ไข*/
-document.getElementById('upload-form').addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const formData = new FormData();
-    const fileInput = document.getElementById('file-input');
-
-    // ตรวจสอบว่าผู้ใช้เลือกไฟล์หรือไม่
-    if (fileInput.files.length === 0) {
-        alert('กรุณาเลือกไฟล์ก่อนอัปโหลด');
-        return;
-    }
-
-    formData.append('image', fileInput.files[0]);
-
-    try {
-        const response = await fetch('http://localhost:3000/upload', {
-            method: 'POST',
-            body: formData,
-        });
-
-        if (!response.ok) {
-            throw new Error('การอัปโหลดล้มเหลว');
-        }
-
-        const result = await response.json();
-        alert('อัปโหลดสำเร็จ: ' + result.message);
-    } catch (error) {
-        alert('เกิดข้อผิดพลาด: ' + error.message);
-    }
 });
 
-
-
-document.addEventListener('DOMContentLoaded', () => {
-    const editButton = document.getElementById('edit-button');
-
-    // ตรวจสอบว่า editButton มีอยู่จริง
-    if (editButton) {
-        editButton.addEventListener('click', () => {
-            // เปลี่ยนเส้นทางไปยังหน้าใหม่
-            window.location.href = './main.html'; // เปลี่ยนหน้า
-        });
-    } else {
-        console.error('ไม่พบปุ่ม edit-button');
-    }
-});

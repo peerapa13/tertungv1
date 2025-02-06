@@ -6,34 +6,30 @@
     <link rel="stylesheet" href="./style.css">
     <title>ตั๋งแต่งเตอร์เติม</title>
 </head>
-
-
-
-<div class="overlay" id="popupOverlay">
-    <div class="popup">
-        <h2>ขั้นตอนการใช้งาน</h2>
-        <p>1. นำโฟลเดอร์ที่ต้องการแก้ไข ดึงมาลงไว้ที่ช่อง Upload</p>
-        <p>2. ตรวจสอบโฟลเดอร์ที่ต้องการแก้ไขว่าถูกต้องหรือไม่</p>
-        <p>3. หากต้องการแก้ไขเฉพาะจุด กดปุ่ม “แก้ไข” เพื่อเข้าสู่การแก้ไขขั้นสูง</p>
-        <p>4. หากแก้ไขทุกอย่างเสร็จสิ้น กดปุ่ม “Finish” แล้วจะกลับมาหน้าหลัก</p>
-        <p>5. กดลูกศรตรงกลางเพื่อเริ่มการแก้ไข</p>
-        <p>6. ดาวน์โหลดไฟล์ที่แก้ไขเสร็จสิ้นแล้ว</p>
-        <p>7. จบการทำงาน</p>
-        <button class="close-btn" onclick="closePopup()">ปิด</button>
-    </div>
-</div>
-
-
 <body>
+
+    <div class="overlay" id="popupOverlay" style="display:none;">
+        <div class="popup">
+            <h2>ขั้นตอนการใช้งาน</h2>
+            <p>1. นำโฟลเดอร์ที่ต้องการแก้ไข ดึงมาลงไว้ที่ช่อง Upload</p>
+            <p>2. ตรวจสอบโฟลเดอร์ที่ต้องการแก้ไขว่าถูกต้องหรือไม่</p>
+            <p>3. หากต้องการแก้ไขเฉพาะจุด กดปุ่ม “แก้ไข” เพื่อเข้าสู่การแก้ไขขั้นสูง</p>
+            <p>4. หากแก้ไขทุกอย่างเสร็จสิ้น กดปุ่ม “Finish” แล้วจะกลับมาหน้าหลัก</p>
+            <p>5. กดลูกศรตรงกลางเพื่อเริ่มการแก้ไข</p>
+            <p>6. ดาวน์โหลดไฟล์ที่แก้ไขเสร็จสิ้นแล้ว</p>
+            <p>7. จบการทำงาน</p>
+            <button class="close-btn" onclick="closePopup()">ปิด</button>
+        </div>
+    </div>
+
     <header>
         <div class="logo">
-            <img src=".\img\DALL·E 2025-01-21 20.19.36 - A minimalist and elegant logo design for the name 'TERTUNG', incorporating unique shapes .webp" alt ="" >
+            <img src=".\img\DALL·E 2025-01-21 20.19.36 - A minimalist and elegant logo design for the name 'TERTUNG', incorporating unique shapes .webp" alt="">
         </div>
         <div class="site-name">
             <h1>ตั๋งแต่งเตอร์เติม</h1>
         </div>
         <p class="cl"><a href="javascript:void(0)" onclick="showPopup()">คำแนะนำ</a></p>
-    
     </header>
 
     <img src="" alt="">
@@ -41,14 +37,13 @@
     <div class="upload-container">
         <!-- รับข้อมูลผู้ใช้ส่งไปเซิร์ฟเวอร์ -->
         <form id="upload-form" enctype="multipart/form-data">
-            <button id="edit-button" class="edit-btn" type="submit">แก้ไข</button>
+            <button id="edit-button" class="edit-btn" type="button">แก้ไข</button>
             <div class="upload-area" id="upload-area">
                 <span id="upload-text">คลิกหรือวางไฟล์ที่นี่</span>
                 <input type="file" id="file-input" class="upload-input" accept="image/*" multiple />
             </div>
         </form>
     </div>
-    
 
     <script src="./script.js"></script>
 </body>
