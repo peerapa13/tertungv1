@@ -44,6 +44,12 @@ async function uploadToCloudinary(file) {
     }
 }
 
+// ฟังก์ชันที่ใช้ในการลบภาพโดยเรียกใช้ delete.js
+async function deleteImage(publicId) {
+    const { deleteFromCloudinary } = require('./delete'); // เรียกใช้ฟังก์ชันจาก delete.js
+    await deleteFromCloudinary(publicId); // ลบภาพจาก Cloudinary
+}
+
 // ฟังก์ชันแสดงภาพที่อัปโหลด
 async function displayImage(file) {
     const uploadedData = await uploadToCloudinary(file);
@@ -66,7 +72,7 @@ async function displayImage(file) {
         uploadArea.removeChild(imageWrapper);
 
         // ลบภาพออกจาก Cloudinary
-        await deleteFromCloudinary(uploadedData.publicId);
+        await deleteImage(uploadedData.publicId);
     });
 
     imageWrapper.appendChild(img);
@@ -74,28 +80,6 @@ async function displayImage(file) {
     uploadArea.appendChild(imageWrapper);
 }
 
-// ฟังก์ชันลบภาพจาก Cloudinary โดยใช้ public_id
-async function deleteFromCloudinary(publicId) {
-    try {
-        const response = await fetch(`https://api.cloudinary.com/v1_1/dmdhq3u7b/image/destroy`, {
-            method: "POST",
-            body: JSON.stringify({ public_id: publicId }), // ส่ง public_id ที่ได้รับจากการอัปโหลด
-            headers: { 
-                "Content-Type": "application/json" 
-            }
-        });
-
-        const data = await response.json();
-        if (data.result === 'ok') {
-            alert('ลบภาพสำเร็จ!');
-        } else {
-            alert('เกิดข้อผิดพลาดในการลบภาพ');
-        }
-    } catch (error) {
-        console.error("Delete failed:", error);
-        alert("เกิดข้อผิดพลาดในการลบภาพ");
-    }
-}
 
 // การจัดการเมื่อคลิกพื้นที่อัปโหลด
 const uploadArea = document.getElementById("upload-area");
