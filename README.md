@@ -1,6 +1,6 @@
 # ⭐ ตั๋งแต่งเตอร์เติม (TertungV1)
 
-![Logo](https://peerapa13.github.io/tertungv1/img/logo.png)
+![Logo]([https://peerapa13.github.io/tertungv1/img/logo.png](https://peerapa13.github.io/tertungv1/img/DALL·E 2025-01-21 20.19.36 - A minimalist and elegant logo design for the name 'TERTUNG', incorporating unique shapes .webp))
 
 > “โปรเจค TertungV1 เป็นส่วนหนึ่งของโครงงานของชั้นมัธยมตอนปลาย เป็นส่วนหนึ่งโครงงานโครงงานเพื่อการศึกษา”  
 
