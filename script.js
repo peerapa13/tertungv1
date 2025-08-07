@@ -163,7 +163,7 @@ async function re() {
     
     // ฟังก์ชันเพื่อตรวจสอบว่า Cloudinary ประมวลผลภาพเสร็จหรือยัง
     async function checkImageProcessingStatus(publicId) {
-        const imageUrl = `https://res.cloudinary.com/dmdhq3u7b/image/upload/e_background_removal/${publicId}`;
+        const imageUrl = `https://res.cloudinary.com/dmdhq3u7b/image/upload/e_enhance/${publicId}`;
 
         let isImageReady = false;
         let retries = 10;  // กำหนดจำนวนการลองซ้ำหากภาพยังไม่เสร็จ
@@ -368,4 +368,5 @@ window.onload = function() {
         localStorage.setItem('popupShown', 'true');
     }
 };
+
 
