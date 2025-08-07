@@ -163,7 +163,7 @@ async function re() {
     
     // ฟังก์ชันเพื่อตรวจสอบว่า Cloudinary ประมวลผลภาพเสร็จหรือยัง
     async function checkImageProcessingStatus(publicId) {
-        const imageUrl = `https://res.cloudinary.com/dmdhq3u7b/image/upload/e_enhance/${publicId}`;
+        const imageUrl = `https://res.cloudinary.com/dmdhq3u7b/image/upload/e_background_removal/${publicId}`;
 
         let isImageReady = false;
         let retries = 10;  // กำหนดจำนวนการลองซ้ำหากภาพยังไม่เสร็จ
@@ -232,14 +232,14 @@ async function re() {
 
 
 
-
+//e_viesus_correct
 async function en() {
     uploadArea.innerHTML = '';  // ล้างพื้นที่แสดงภาพเดิม
     let uploadedImages = JSON.parse(localStorage.getItem('uploadedImages')) || [];
 
     // ฟังก์ชันเพื่อตรวจสอบว่า Cloudinary ประมวลผลภาพเสร็จหรือยัง
     async function checkImageProcessingStatus(publicId) {
-        const imageUrl = `https://res.cloudinary.com/dmdhq3u7b/image/upload/e_viesus_correct/${publicId}`;
+        const imageUrl = `https://res.cloudinary.com/dmdhq3u7b/image/upload/e_enhance/${publicId}`;
 
         let isImageReady = false;
         let retries = 10;  // กำหนดจำนวนการลองซ้ำหากภาพยังไม่เสร็จ
@@ -258,7 +258,7 @@ async function en() {
 
     for (const publicId of uploadedImages) {
         // ใช้ publicId แทน displayName
-        const imageUrl = `https://res.cloudinary.com/dmdhq3u7b/image/upload/e_viesus_correct/${publicId}`;
+        const imageUrl = `https://res.cloudinary.com/dmdhq3u7b/image/upload/e_enhance/${publicId}`;
 
         // เช็คสถานะภาพก่อนแสดง
         const isReady = await checkImageProcessingStatus(publicId);
@@ -368,5 +368,6 @@ window.onload = function() {
         localStorage.setItem('popupShown', 'true');
     }
 };
+
 
 
