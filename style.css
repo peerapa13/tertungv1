@@ -1,5 +1,5 @@
 body {
-    background-image: url('https://img.freepik.com/free-vector/dark-hexagonal-background-with-gradient-color_79603-1409.jpg;');
+    background-image: url('https://img.freepik.com/free-vector/dark-hexagonal-background-with-gradient-color_79603-1409.jpg');
     background-size: cover;
     margin: 0;
     height: 100vh;
@@ -287,5 +287,6 @@ button {
 button:hover {
     background-color: #0056b3;
 }
+
 
 
