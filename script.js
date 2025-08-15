@@ -11,6 +11,17 @@ function clearUploadedImages() {
     localStorage.removeItem('uploadedImages');  // ลบข้อมูลที่เก็บไว้ใน uploadedImages
 }
 
+function updateUploadText() {
+    const uploadText = document.getElementById("upload-text");
+    const hasImages = uploadArea.querySelectorAll(".image-wrapper").length > 0;
+
+    if (hasImages) {
+        uploadText.style.display = "none"; // ซ่อนข้อความ
+    } else {
+        uploadText.style.display = "block"; // แสดงข้อความ
+    }
+}
+
 // ฟังก์ชันอัปโหลดภาพไปยัง Cloudinary
 async function uploadToCloudinary(file) {
     const formData = new FormData();
@@ -83,6 +94,7 @@ async function displayImage(file) {
             localStorage.setItem('uploadedImages', JSON.stringify(uploadedImages));  // บันทึกการเปลี่ยนแปลงใน localStorage
             console.log(uploadedImages);
         }
+         updateUploadText(); //เช็คว่าควรแสดงข้อความไหม
     });
 
     imageWrapper.appendChild(deleteBtn);
@@ -121,7 +133,9 @@ function loadImagesFromLocalStorage() {
                 uploadedImages.splice(indexToRemove, 1);  // ลบ public_id ออกจากอาร์เรย์
                 localStorage.setItem('uploadedImages', JSON.stringify(uploadedImages));  // บันทึกการเปลี่ยนแปลงใน localStorage
                 console.log(uploadedImages);
+                
             }
+            updateUploadText(); //เช็คว่าควรแสดงข้อความไหม
         });
 
         imageWrapper.appendChild(img);
@@ -345,6 +359,7 @@ function deleteA() {
 
     // รีเซ็ตค่า file input 
     fileInput.value = "";
+    updateUploadText();//เช็คว่าควรแสดงข้อความไหม
 
 }
 
@@ -389,6 +404,7 @@ window.onload = function() {
         localStorage.setItem('popupShown', 'true');
     }
 };
+
 
 
 
