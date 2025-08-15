@@ -85,7 +85,6 @@ async function displayImage(file) {
         }
     });
 
-    imageWrapper.appendChild(img);
     imageWrapper.appendChild(deleteBtn);
     uploadArea.appendChild(imageWrapper);
 }
@@ -302,26 +301,7 @@ async function en() {
     console.log(uploadedImages);
 }
 
-
-
-
-
-
-
-/* ปุ่มแก้ไข */
-document.getElementById('removebg').addEventListener('click', () => {
-    // แกไข้ภาพ
-    re()
-});
-
-document.getElementById('Enhancingimages').addEventListener('click', () => {
-    // แกไข้ภาพ
-    en()
-});
-
-
-//ฟังชันโหลด
-document.getElementById("downloadAll").addEventListener("click", async function() {
+async function downloadA(){
     const images = document.querySelectorAll("#upload-area img");
 
     if (images.length === 0) {
@@ -352,6 +332,43 @@ document.getElementById("downloadAll").addEventListener("click", async function(
 
         await new Promise(resolve => setTimeout(resolve, 500)); // หน่วงเวลาป้องกันโหลดพร้อมกันเกินไป
     }
+    
+}
+
+// ฟังก์ชันลบภาพทั้งหมด แต่ลบเฉพาะ public_id
+function  deleteA() {
+    // ล้างพื้นที่ uploadArea
+    uploadArea.innerHTML = "";
+    
+    // เคลียร์เฉพาะ array ของ public_id
+    localStorage.setItem('uploadedImages', JSON.stringify([]));
+
+}
+
+
+
+
+
+
+/* ส่วนของการกดปุ่มเรียกฟังชั่น */
+//ลบพื้นหลัง
+document.getElementById('removebg').addEventListener('click', () => {
+    re()
+});
+
+//แก้ไข้ภาพ
+document.getElementById('Enhancingimages').addEventListener('click', () => {
+    en()
+});
+
+//โหลดภาพ
+document.getElementById("downloadAll").addEventListener("click", () => {
+    downloadA()
+});
+
+//ลบภาพทั้งหมด
+document.getElementById("removeAll").addEventListener("click", () => {
+    deleteA()
 });
 
 
@@ -368,6 +385,7 @@ window.onload = function() {
         localStorage.setItem('popupShown', 'true');
     }
 };
+
 
 
 
