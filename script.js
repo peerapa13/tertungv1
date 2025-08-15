@@ -336,14 +336,18 @@ async function downloadA(){
 }
 
 // ฟังก์ชันลบภาพทั้งหมด แต่ลบเฉพาะ public_id
-function  deleteA() {
+function deleteA() {
     // ล้างพื้นที่ uploadArea
     uploadArea.innerHTML = "";
-    
+
     // เคลียร์เฉพาะ array ของ public_id
     localStorage.setItem('uploadedImages', JSON.stringify([]));
 
+    // รีเซ็ตค่า file input 
+    fileInput.value = "";
+
 }
+
 
 
 
@@ -385,6 +389,7 @@ window.onload = function() {
         localStorage.setItem('popupShown', 'true');
     }
 };
+
 
 
 
