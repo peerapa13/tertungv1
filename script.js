@@ -11,14 +11,15 @@ function clearUploadedImages() {
     localStorage.removeItem('uploadedImages');  // ลบข้อมูลที่เก็บไว้ใน uploadedImages
 }
 
+//เช็คว่าควรแสดงข้อความไหม
 function updateUploadText() {
     const uploadText = document.getElementById("upload-text");
     const hasImages = uploadArea.querySelectorAll(".image-wrapper").length > 0;
 
     if (hasImages) {
-        uploadText.style.display = "none"; // ซ่อนข้อความ
+        uploadText.style.display = "none"; 
     } else {
-        uploadText.style.display = "block"; // แสดงข้อความ
+        uploadText.style.display = "block"; 
     }
 }
 
@@ -94,9 +95,8 @@ async function displayImage(file) {
             localStorage.setItem('uploadedImages', JSON.stringify(uploadedImages));  // บันทึกการเปลี่ยนแปลงใน localStorage
             console.log(uploadedImages);
         }
-         updateUploadText(); //เช็คว่าควรแสดงข้อความไหม
     });
-
+    
     imageWrapper.appendChild(deleteBtn);
     uploadArea.appendChild(imageWrapper);
 }
@@ -135,7 +135,6 @@ function loadImagesFromLocalStorage() {
                 console.log(uploadedImages);
                 
             }
-            updateUploadText(); //เช็คว่าควรแสดงข้อความไหม
         });
 
         imageWrapper.appendChild(img);
@@ -148,6 +147,15 @@ function loadImagesFromLocalStorage() {
 // การจัดการเมื่อคลิกพื้นที่อัปโหลด
 const uploadArea = document.getElementById("upload-area");
 const fileInput = document.getElementById("file-input");
+
+
+// สร้าง observer เพื่อเช็คว่า uploadArea ไม่มีไฟล์แล้วหรือไม่
+const observer = new MutationObserver(() => {
+    updateUploadText();
+});
+observer.observe(uploadArea, { childList: true });
+updateUploadText();
+
 
 uploadArea.addEventListener("click", (event) => {
     if (event.target === uploadArea) {
@@ -226,6 +234,7 @@ async function re() {
                     uploadedImages.splice(indexToRemove, 1);  // ลบ public_id ออกจากอาร์เรย์
                     localStorage.setItem('uploadedImages', JSON.stringify(uploadedImages));  // บันทึกการเปลี่ยนแปลงใน localStorage
                 }
+                updateUploadText();
             });
 
             imageWrapper.appendChild(img);
@@ -351,8 +360,9 @@ async function downloadA(){
 
 // ฟังก์ชันลบภาพทั้งหมด แต่ลบเฉพาะ public_id
 function deleteA() {
-    // ล้างพื้นที่ uploadArea
-    uploadArea.innerHTML = "";
+    
+    const images = uploadArea.querySelectorAll(".image-wrapper");
+    images.forEach(img => uploadArea.removeChild(img));
 
     // เคลียร์เฉพาะ array ของ public_id
     localStorage.setItem('uploadedImages', JSON.stringify([]));
@@ -404,6 +414,7 @@ window.onload = function() {
         localStorage.setItem('popupShown', 'true');
     }
 };
+
 
 
 
