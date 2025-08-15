@@ -140,41 +140,51 @@ function loadImagesFromLocalStorage() {
 }
 
 
-
-
-// อัปโหลดหลายไฟล์พร้อมกัน + แสดง preview ทันที
+// อัปโหลดหลายไฟล์พร้อมกัน + preview + progress bar
 function handleFiles(files) {
     Array.from(files).forEach(file => {
-        // แสดง preview ทันที (ยังไม่รอ upload)
-        const previewWrapper = document.createElement("div");
-        previewWrapper.className = "image-wrapper";
-        previewWrapper.innerHTML = `<img src="${URL.createObjectURL(file)}" />`;
-        uploadArea.appendChild(previewWrapper);
+        const wrapper = document.createElement("div");
+        wrapper.className = "image-wrapper";
 
-        // อัปโหลดจริงข้างหลัง
-        uploadToCloudinary(file).then(data => {
-            if (data) {
-                // แทนที่ preview ด้วย URL จริง
-                const img = previewWrapper.querySelector("img");
-                img.src = data.imageUrl;
+        // สร้าง preview image
+        const img = document.createElement("img");
+        img.src = URL.createObjectURL(file);
+        wrapper.appendChild(img);
 
-                // เพิ่มปุ่มลบและฟังก์ชันลบ
-                const deleteBtn = document.createElement("button");
-                deleteBtn.className = "delete-btn";
-                deleteBtn.innerHTML = "×";
-                deleteBtn.addEventListener("click", (e) => {
-                    e.stopPropagation();
-                    uploadArea.removeChild(previewWrapper);
+        // สร้าง progress bar
+        const progress = document.createElement("div");
+        progress.className = "progress-bar";
+        progress.innerHTML = `<div class="progress-fill" style="width: 0%;"></div>`;
+        wrapper.appendChild(progress);
 
-                    const uploadedImages = JSON.parse(localStorage.getItem('uploadedImages')) || [];
-                    const index = uploadedImages.indexOf(data.publicId);
-                    if (index !== -1) {
-                        uploadedImages.splice(index, 1);
-                        localStorage.setItem('uploadedImages', JSON.stringify(uploadedImages));
-                    }
-                });
-                previewWrapper.appendChild(deleteBtn);
-            }
+        uploadArea.appendChild(wrapper);
+
+        // อัปโหลดจริง
+        uploadToCloudinary(file, (percent) => {
+            wrapper.querySelector(".progress-fill").style.width = percent + "%";
+        }).then(data => {
+            // เพิ่มปุ่มลบ
+            const deleteBtn = document.createElement("button");
+            deleteBtn.className = "delete-btn";
+            deleteBtn.innerHTML = "×";
+            deleteBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                uploadArea.removeChild(wrapper);
+
+                const uploadedImages = JSON.parse(localStorage.getItem('uploadedImages')) || [];
+                const index = uploadedImages.indexOf(data.publicId);
+                if (index !== -1) {
+                    uploadedImages.splice(index, 1);
+                    localStorage.setItem('uploadedImages', JSON.stringify(uploadedImages));
+                }
+            });
+            wrapper.appendChild(deleteBtn);
+
+            // ปรับขนาดภาพจริงถ้าต้องการ หรือเอา progress bar ออก
+            wrapper.removeChild(progress);
+            img.src = data.imageUrl; // เปลี่ยนเป็น URL จริงของ Cloudinary
+        }).catch(() => {
+            wrapper.remove(); // ถ้า upload fail ลบ preview
         });
     });
 }
@@ -429,6 +439,7 @@ window.onload = function() {
         localStorage.setItem('popupShown', 'true');
     }
 };
+
 
 
 
