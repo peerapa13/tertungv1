@@ -145,23 +145,25 @@ function loadImagesFromLocalStorage() {
 // อัปโหลดหลายไฟล์พร้อมกัน + preview 
 function handleFiles(files) {
     Array.from(files).forEach(file => {
-        // สร้าง wrapper สำหรับ preview
         const wrapper = document.createElement("div");
         wrapper.className = "image-wrapper";
 
-        // สร้าง preview สีเทา
+        // preview สีเทา + shimmer loader
         const img = document.createElement("img");
         img.src = URL.createObjectURL(file);
-        img.style.filter = "grayscale(80%)"; // สีเทา
+        img.classList.add("loading-shimmer"); // start shimmer
         wrapper.appendChild(img);
         uploadArea.appendChild(wrapper);
 
         // เริ่มอัปโหลด
         uploadToCloudinary(file).then(data => {
             if (data) {
-                // เปลี่ยน preview เป็นสีจริงเมื่ออัปโหลดเสร็จ
+                // อัปเดตภาพและหยุด shimmer ทันที
+                img.classList.remove("loading-shimmer"); // stop shimmer
+                img.style.transition = "filter 0.5s, opacity 0.5s"; // fade-in
                 img.src = data.imageUrl;
                 img.style.filter = "none";
+                img.style.opacity = "1";
 
                 // เพิ่มปุ่มลบ
                 const deleteBtn = document.createElement("button");
@@ -179,12 +181,9 @@ function handleFiles(files) {
                 });
                 wrapper.appendChild(deleteBtn);
             }
-        }).catch(() => {
-            wrapper.remove(); // ลบ preview ถ้า upload fail
-        });
+        }).catch(() => wrapper.remove());
     });
 }
-
 
 
 
@@ -436,6 +435,7 @@ window.onload = function() {
         localStorage.setItem('popupShown', 'true');
     }
 };
+
 
 
 
