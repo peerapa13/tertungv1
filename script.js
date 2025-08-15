@@ -10,25 +10,36 @@ function closePopup() {
 function clearUploadedImages() {
     localStorage.removeItem('uploadedImages');  // ลบข้อมูลที่เก็บไว้ใน uploadedImages
 }
+
 // ฟังก์ชัน progress bar 
-function createProgressBar(wrapper) {
-    const progressPopup = document.createElement("div");
-    progressPopup.className = "progress-popup";
-    progressPopup.innerHTML = `<div class="progress-fill" style="width:0%;"></div>`;
-    wrapper.appendChild(progressPopup);
-
-    // คืนค่าฟังก์ชันสำหรับอัปเดต progress
-    return function updateProgress(percent) {
-        const fill = progressPopup.querySelector(".progress-fill");
-        fill.style.width = percent + "%";
-    };
+// --- Global progress popup ---
+const globalProgressPopup = document.createElement("div");
+globalProgressPopup.className = "global-progress-popup";
+globalProgressPopup.innerHTML = `
+    <div class="global-progress-bar">
+        <div class="global-progress-fill" style="width:0%;"></div>
+    </div>
+    <div class="progress-text">0%</div>
+`;
+document.body.appendChild(globalProgressPopup);
+// แสดง popup
+function showProgressBar() {
+    globalProgressPopup.style.display = "flex";
+}
+// ซ่อน popup
+function hideProgressBar() {
+    globalProgressPopup.style.display = "none";
+    updateProgressBar(0);
+}
+// อัปเดต progress
+function updateProgressBar(percent) {
+    const fill = globalProgressPopup.querySelector(".global-progress-fill");
+    const text = globalProgressPopup.querySelector(".progress-text");
+    fill.style.width = percent + "%";
+    text.textContent = Math.round(percent) + "%";
 }
 
-// ฟังก์ชันลบ progress bar
-function removeProgressBar(wrapper) {
-    const popup = wrapper.querySelector(".progress-popup");
-    if (popup) popup.remove();
-}
+
 
 
 //เช็คว่าควรแสดงข้อความไหม
@@ -162,41 +173,27 @@ function loadImagesFromLocalStorage() {
 
 // อัปโหลดหลายไฟล์พร้อมกัน + preview + progress bar
 function handleFiles(files) {
-    Array.from(files).forEach(file => {
-        const wrapper = document.createElement("div");
-        wrapper.className = "image-wrapper";
+    const fileArray = Array.from(files);
+    const progressMap = new Map(); // เก็บ % ของแต่ละไฟล์
+    showProgressBar();
 
-        const img = document.createElement("img");
-        img.src = URL.createObjectURL(file);
-        wrapper.appendChild(img);
-        uploadArea.appendChild(wrapper);
+    const promises = fileArray.map(file => {
+        return uploadToCloudinary(file, (percent) => {
+            progressMap.set(file.name, percent); // บันทึก % ของไฟล์นี้
+            // คำนวณ % เฉลี่ย
+            const totalPercent = Array.from(progressMap.values()).reduce((a,b)=>a+b,0) / fileArray.length;
+            updateProgressBar(totalPercent);
+        });
+    });
 
-        // สร้าง progress bar แยก
-        const updateProgress = createProgressBar(wrapper);
-
-        // อัปโหลด
-        uploadToCloudinary(file, updateProgress).then(data => {
-            // ลบ progress bar หลังอัปโหลดเสร็จ
-            removeProgressBar(wrapper);
-
-            img.src = data.imageUrl;
-
-            // เพิ่มปุ่มลบ
-            const deleteBtn = document.createElement("button");
-            deleteBtn.className = "delete-btn";
-            deleteBtn.innerHTML = "×";
-            deleteBtn.addEventListener("click", e => {
-                e.stopPropagation();
-                uploadArea.removeChild(wrapper);
-                const uploadedImages = JSON.parse(localStorage.getItem('uploadedImages')) || [];
-                const index = uploadedImages.indexOf(data.publicId);
-                if (index !== -1) {
-                    uploadedImages.splice(index, 1);
-                    localStorage.setItem('uploadedImages', JSON.stringify(uploadedImages));
-                }
-            });
-            wrapper.appendChild(deleteBtn);
-        }).catch(() => wrapper.remove());
+    Promise.all(promises).then(results => {
+        hideProgressBar();
+        results.forEach(data => {
+            if (data) displayImage(data); // แสดงภาพ + ปุ่มลบ
+        });
+    }).catch(() => {
+        hideProgressBar();
+        alert("เกิดข้อผิดพลาดในการอัปโหลดไฟล์บางไฟล์!");
     });
 }
 
@@ -450,6 +447,7 @@ window.onload = function() {
         localStorage.setItem('popupShown', 'true');
     }
 };
+
 
 
 
