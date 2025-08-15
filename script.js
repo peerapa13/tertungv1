@@ -38,37 +38,67 @@ observer.observe(uploadArea, { childList: true });
 updateUploadText();
 
 
-// ฟังก์ชันอัปโหลดภาพไปยัง Cloudinary
-async function uploadToCloudinary(file) {
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", "imgweb"); // ใช้ Upload Preset
+// อัปโหลดหลายไฟล์ไปยัง Cloudinaryพร้อมกัน + preview 
+async function handleFiles(files) {
+    const uploadedImages = JSON.parse(localStorage.getItem('uploadedImages')) || [];
 
-    try {
-        const response = await fetch("https://api.cloudinary.com/v1_1/dmdhq3u7b/image/upload", {
-            method: "POST",
-            body: formData
+    // สร้าง preview ทุกไฟล์ก่อน
+    const previews = Array.from(files).map(file => {
+        const wrapper = document.createElement("div");
+        wrapper.className = "image-wrapper";
+
+        const img = document.createElement("img");
+        img.src = URL.createObjectURL(file);
+        img.style.filter = "grayscale(80%)"; // preview สีเทา
+        wrapper.appendChild(img);
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.className = "delete-btn";
+        deleteBtn.innerHTML = "×";
+        deleteBtn.addEventListener("click", e => {
+            e.stopPropagation();
+            wrapper.remove();
+            const index = uploadedImages.indexOf(wrapper.dataset.publicId);
+            if (index !== -1) {
+                uploadedImages.splice(index, 1);
+                localStorage.setItem('uploadedImages', JSON.stringify(uploadedImages));
+            }
         });
+        wrapper.appendChild(deleteBtn);
 
-        const data = await response.json();
-        
-        // เก็บ public_id ใน localStorage
-        const uploadedPublicId = data.public_id;
-        let uploadedImages = JSON.parse(localStorage.getItem('uploadedImages')) || [];
-        uploadedImages.push(uploadedPublicId);
-        localStorage.setItem('uploadedImages', JSON.stringify(uploadedImages));
+        uploadArea.appendChild(wrapper);
 
-        return { 
-            imageUrl: data.secure_url,  // URL รูปภาพที่อัปโหลด
-            publicId: uploadedPublicId  // ID สำหรับใช้ลบภาพ
-        };
+        return { file, wrapper, img };
+    });
 
+    // อัปโหลดทุกไฟล์พร้อมกันไปยัง Cloudinary
+    const uploadPromises = previews.map(({ file, wrapper, img }) =>
+        fetch("https://api.cloudinary.com/v1_1/dmdhq3u7b/image/upload", {
+            method: "POST",
+            body: (() => {
+                const fd = new FormData();
+                fd.append("file", file);
+                fd.append("upload_preset", "imgweb");
+                return fd;
+            })()
+        })
+        .then(res => res.json())
+        .then(data => {
+            img.src = data.secure_url;  
+            img.style.filter = "none";
+            wrapper.dataset.publicId = data.public_id; 
 
-    } catch (error) {
-        console.error("Upload failed:", error);
-        alert("เกิดข้อผิดพลาดในการอัปโหลด กรุณาลองใหม่");
-        return null;
-    }
+            uploadedImages.push(data.public_id);
+            return data;
+        })
+        .catch(() => wrapper.remove()) 
+    );
+
+    // รอให้ทุกไฟล์อัปโหลดเสร็จ แล้วบันทึก localStorage ทีเดียว
+    const results = await Promise.all(uploadPromises);
+    localStorage.setItem('uploadedImages', JSON.stringify(uploadedImages));
+
+    return results.map(r => ({ imageUrl: r.secure_url, publicId: r.public_id }));
 }
 
 // ฟังก์ชันแสดงภาพที่อัปโหลด
@@ -141,49 +171,6 @@ function loadImagesFromLocalStorage() {
     });
 }
 
-
-// อัปโหลดหลายไฟล์พร้อมกัน + preview 
-function handleFiles(files) {
-    Array.from(files).forEach(file => {
-        // สร้าง wrapper สำหรับ preview
-        const wrapper = document.createElement("div");
-        wrapper.className = "image-wrapper";
-
-        // สร้าง preview สีเทา
-        const img = document.createElement("img");
-        img.src = URL.createObjectURL(file);
-        img.style.filter = "grayscale(80%)"; // สีเทา
-        wrapper.appendChild(img);
-        uploadArea.appendChild(wrapper);
-
-        // เริ่มอัปโหลด
-        uploadToCloudinary(file).then(data => {
-            if (data) {
-                // เปลี่ยน preview เป็นสีจริงเมื่ออัปโหลดเสร็จ
-                img.src = data.imageUrl;
-                img.style.filter = "none";
-
-                // เพิ่มปุ่มลบ
-                const deleteBtn = document.createElement("button");
-                deleteBtn.className = "delete-btn";
-                deleteBtn.innerHTML = "×";
-                deleteBtn.addEventListener("click", e => {
-                    e.stopPropagation();
-                    uploadArea.removeChild(wrapper);
-                    const uploadedImages = JSON.parse(localStorage.getItem('uploadedImages')) || [];
-                    const index = uploadedImages.indexOf(data.publicId);
-                    if (index !== -1) {
-                        uploadedImages.splice(index, 1);
-                        localStorage.setItem('uploadedImages', JSON.stringify(uploadedImages));
-                    }
-                });
-                wrapper.appendChild(deleteBtn);
-            }
-        }).catch(() => {
-            wrapper.remove(); // ลบ preview ถ้า upload fail
-        });
-    });
-}
 
 
 
@@ -436,4 +423,5 @@ window.onload = function() {
         localStorage.setItem('popupShown', 'true');
     }
 };
+
 
