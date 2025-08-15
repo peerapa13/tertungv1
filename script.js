@@ -10,6 +10,26 @@ function closePopup() {
 function clearUploadedImages() {
     localStorage.removeItem('uploadedImages');  // ลบข้อมูลที่เก็บไว้ใน uploadedImages
 }
+// ฟังก์ชัน progress bar 
+function createProgressBar(wrapper) {
+    const progressPopup = document.createElement("div");
+    progressPopup.className = "progress-popup";
+    progressPopup.innerHTML = `<div class="progress-fill" style="width:0%;"></div>`;
+    wrapper.appendChild(progressPopup);
+
+    // คืนค่าฟังก์ชันสำหรับอัปเดต progress
+    return function updateProgress(percent) {
+        const fill = progressPopup.querySelector(".progress-fill");
+        fill.style.width = percent + "%";
+    };
+}
+
+// ฟังก์ชันลบ progress bar
+function removeProgressBar(wrapper) {
+    const popup = wrapper.querySelector(".progress-popup");
+    if (popup) popup.remove();
+}
+
 
 //เช็คว่าควรแสดงข้อความไหม
 function updateUploadText() {
@@ -146,31 +166,28 @@ function handleFiles(files) {
         const wrapper = document.createElement("div");
         wrapper.className = "image-wrapper";
 
-        // สร้าง preview image
         const img = document.createElement("img");
         img.src = URL.createObjectURL(file);
         wrapper.appendChild(img);
-
-        // สร้าง progress bar
-        const progress = document.createElement("div");
-        progress.className = "progress-bar";
-        progress.innerHTML = `<div class="progress-fill" style="width: 0%;"></div>`;
-        wrapper.appendChild(progress);
-
         uploadArea.appendChild(wrapper);
 
-        // อัปโหลดจริง
-        uploadToCloudinary(file, (percent) => {
-            wrapper.querySelector(".progress-fill").style.width = percent + "%";
-        }).then(data => {
+        // สร้าง progress bar แยก
+        const updateProgress = createProgressBar(wrapper);
+
+        // อัปโหลด
+        uploadToCloudinary(file, updateProgress).then(data => {
+            // ลบ progress bar หลังอัปโหลดเสร็จ
+            removeProgressBar(wrapper);
+
+            img.src = data.imageUrl;
+
             // เพิ่มปุ่มลบ
             const deleteBtn = document.createElement("button");
             deleteBtn.className = "delete-btn";
             deleteBtn.innerHTML = "×";
-            deleteBtn.addEventListener("click", (e) => {
+            deleteBtn.addEventListener("click", e => {
                 e.stopPropagation();
                 uploadArea.removeChild(wrapper);
-
                 const uploadedImages = JSON.parse(localStorage.getItem('uploadedImages')) || [];
                 const index = uploadedImages.indexOf(data.publicId);
                 if (index !== -1) {
@@ -179,15 +196,11 @@ function handleFiles(files) {
                 }
             });
             wrapper.appendChild(deleteBtn);
-
-            // ปรับขนาดภาพจริงถ้าต้องการ หรือเอา progress bar ออก
-            wrapper.removeChild(progress);
-            img.src = data.imageUrl; // เปลี่ยนเป็น URL จริงของ Cloudinary
-        }).catch(() => {
-            wrapper.remove(); // ถ้า upload fail ลบ preview
-        });
+        }).catch(() => wrapper.remove());
     });
 }
+
+
 
 // คลิกพื้นที่อัปโหลด
 uploadArea.addEventListener("click", (e) => {
@@ -196,8 +209,6 @@ uploadArea.addEventListener("click", (e) => {
 
 // เลือกไฟล์
 fileInput.addEventListener("change", (e) => handleFiles(e.target.files));
-
-
 
 
 
@@ -439,6 +450,7 @@ window.onload = function() {
         localStorage.setItem('popupShown', 'true');
     }
 };
+
 
 
 
