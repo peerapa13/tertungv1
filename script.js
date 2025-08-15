@@ -46,12 +46,28 @@ async function handleFiles(files) {
     const previews = Array.from(files).map(file => {
         const wrapper = document.createElement("div");
         wrapper.className = "image-wrapper";
+        wrapper.style.position = "relative"; // ให้ overlay ซ้อนได้
 
         const img = document.createElement("img");
         img.src = URL.createObjectURL(file);
-        img.style.filter = "grayscale(80%)"; // preview สีเทา
+        img.style.opacity = "0.5"; // ทำให้ซีดลงบอกว่ายังอัปโหลดไม่เสร็จ
         wrapper.appendChild(img);
 
+        // overlay "Uploading..."
+        const overlay = document.createElement("div");
+        overlay.innerText = "Uploading...";
+        overlay.style.position = "absolute";
+        overlay.style.top = "50%";
+        overlay.style.left = "50%";
+        overlay.style.transform = "translate(-50%, -50%)";
+        overlay.style.color = "white";
+        overlay.style.background = "rgba(0,0,0,0.6)";
+        overlay.style.padding = "4px 8px";
+        overlay.style.borderRadius = "6px";
+        overlay.style.fontSize = "14px";
+        wrapper.appendChild(overlay);
+
+        // ปุ่มลบ
         const deleteBtn = document.createElement("button");
         deleteBtn.className = "delete-btn";
         deleteBtn.innerHTML = "×";
@@ -68,11 +84,11 @@ async function handleFiles(files) {
 
         uploadArea.appendChild(wrapper);
 
-        return { file, wrapper, img };
+        return { file, wrapper, img, overlay };
     });
 
-    // อัปโหลดทุกไฟล์พร้อมกันไปยัง Cloudinary
-    const uploadPromises = previews.map(({ file, wrapper, img }) =>
+    // อัปโหลดทุกไฟล์พร้อมกัน
+    const uploadPromises = previews.map(({ file, wrapper, img, overlay }) =>
         fetch("https://api.cloudinary.com/v1_1/dmdhq3u7b/image/upload", {
             method: "POST",
             body: (() => {
@@ -84,22 +100,23 @@ async function handleFiles(files) {
         })
         .then(res => res.json())
         .then(data => {
-            img.src = data.secure_url;  
-            img.style.filter = "none";
-            wrapper.dataset.publicId = data.public_id; 
-
+            img.src = data.secure_url;
+            img.style.opacity = "1";         // กลับมาเต็มสี
+            wrapper.removeChild(overlay);    // เอา overlay ออก
+            wrapper.dataset.publicId = data.public_id;
             uploadedImages.push(data.public_id);
             return data;
         })
-        .catch(() => wrapper.remove()) 
+        .catch(() => wrapper.remove())
     );
 
-    // รอให้ทุกไฟล์อัปโหลดเสร็จ แล้วบันทึก localStorage ทีเดียว
+    // รอให้ทุกไฟล์อัปโหลดเสร็จ แล้วเก็บ localStorage ทีเดียว
     const results = await Promise.all(uploadPromises);
     localStorage.setItem('uploadedImages', JSON.stringify(uploadedImages));
 
     return results.map(r => ({ imageUrl: r.secure_url, publicId: r.public_id }));
 }
+
 
 // ฟังก์ชันแสดงภาพที่อัปโหลด
 async function displayImage(file) {
@@ -423,5 +440,6 @@ window.onload = function() {
         localStorage.setItem('popupShown', 'true');
     }
 };
+
 
 
