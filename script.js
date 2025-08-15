@@ -11,35 +11,6 @@ function clearUploadedImages() {
     localStorage.removeItem('uploadedImages');  // ลบข้อมูลที่เก็บไว้ใน uploadedImages
 }
 
-// ฟังก์ชัน progress bar 
-// --- Global progress popup ---
-const globalProgressPopup = document.createElement("div");
-globalProgressPopup.className = "global-progress-popup";
-globalProgressPopup.innerHTML = `
-    <div class="global-progress-bar">
-        <div class="global-progress-fill" style="width:0%;"></div>
-    </div>
-    <div class="progress-text">0%</div>
-`;
-document.body.appendChild(globalProgressPopup);
-// แสดง popup
-function showProgressBar() {
-    globalProgressPopup.style.display = "flex";
-}
-// ซ่อน popup
-function hideProgressBar() {
-    globalProgressPopup.style.display = "none";
-    updateProgressBar(0);
-}
-// อัปเดต progress
-function updateProgressBar(percent) {
-    const fill = globalProgressPopup.querySelector(".global-progress-fill");
-    const text = globalProgressPopup.querySelector(".progress-text");
-    fill.style.width = percent + "%";
-    text.textContent = Math.round(percent) + "%";
-}
-
-
 
 
 //เช็คว่าควรแสดงข้อความไหม
@@ -171,31 +142,49 @@ function loadImagesFromLocalStorage() {
 }
 
 
-// อัปโหลดหลายไฟล์พร้อมกัน + preview + progress bar
+// อัปโหลดหลายไฟล์พร้อมกัน + preview 
 function handleFiles(files) {
-    const fileArray = Array.from(files);
-    const progressMap = new Map(); // เก็บ % ของแต่ละไฟล์
-    showProgressBar();
+    Array.from(files).forEach(file => {
+        // สร้าง wrapper สำหรับ preview
+        const wrapper = document.createElement("div");
+        wrapper.className = "image-wrapper";
 
-    const promises = fileArray.map(file => {
-        return uploadToCloudinary(file, (percent) => {
-            progressMap.set(file.name, percent); // บันทึก % ของไฟล์นี้
-            // คำนวณ % เฉลี่ย
-            const totalPercent = Array.from(progressMap.values()).reduce((a,b)=>a+b,0) / fileArray.length;
-            updateProgressBar(totalPercent);
-        });
-    });
+        // สร้าง preview สีเทา
+        const img = document.createElement("img");
+        img.src = URL.createObjectURL(file);
+        img.style.filter = "grayscale(80%)"; // สีเทา
+        wrapper.appendChild(img);
+        uploadArea.appendChild(wrapper);
 
-    Promise.all(promises).then(results => {
-        hideProgressBar();
-        results.forEach(data => {
-            if (data) displayImage(data); // แสดงภาพ + ปุ่มลบ
+        // เริ่มอัปโหลด
+        uploadToCloudinary(file).then(data => {
+            if (data) {
+                // เปลี่ยน preview เป็นสีจริงเมื่ออัปโหลดเสร็จ
+                img.src = data.imageUrl;
+                img.style.filter = "none";
+
+                // เพิ่มปุ่มลบ
+                const deleteBtn = document.createElement("button");
+                deleteBtn.className = "delete-btn";
+                deleteBtn.innerHTML = "×";
+                deleteBtn.addEventListener("click", e => {
+                    e.stopPropagation();
+                    uploadArea.removeChild(wrapper);
+                    const uploadedImages = JSON.parse(localStorage.getItem('uploadedImages')) || [];
+                    const index = uploadedImages.indexOf(data.publicId);
+                    if (index !== -1) {
+                        uploadedImages.splice(index, 1);
+                        localStorage.setItem('uploadedImages', JSON.stringify(uploadedImages));
+                    }
+                });
+                wrapper.appendChild(deleteBtn);
+            }
+        }).catch(() => {
+            wrapper.remove(); // ลบ preview ถ้า upload fail
         });
-    }).catch(() => {
-        hideProgressBar();
-        alert("เกิดข้อผิดพลาดในการอัปโหลดไฟล์บางไฟล์!");
     });
 }
+
 
 
 
@@ -447,6 +436,7 @@ window.onload = function() {
         localStorage.setItem('popupShown', 'true');
     }
 };
+
 
 
 
