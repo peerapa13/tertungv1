@@ -23,6 +23,19 @@ function updateUploadText() {
     }
 }
 
+// การจัดการเมื่อคลิกพื้นที่อัปโหลด
+const uploadArea = document.getElementById("upload-area");
+const fileInput = document.getElementById("file-input");
+
+
+// สร้าง observer เพื่อเช็คว่า uploadArea ไม่มีไฟล์แล้วหรือไม่
+const observer = new MutationObserver(() => {
+    updateUploadText();
+});
+observer.observe(uploadArea, { childList: true });
+updateUploadText();
+
+
 // ฟังก์ชันอัปโหลดภาพไปยัง Cloudinary
 async function uploadToCloudinary(file) {
     const formData = new FormData();
@@ -36,16 +49,12 @@ async function uploadToCloudinary(file) {
         });
 
         const data = await response.json();
-        console.log(data);
         
         // เก็บ public_id ใน localStorage
         const uploadedPublicId = data.public_id;
         let uploadedImages = JSON.parse(localStorage.getItem('uploadedImages')) || [];
         uploadedImages.push(uploadedPublicId);
         localStorage.setItem('uploadedImages', JSON.stringify(uploadedImages));
-
-        
-
 
         return { 
             imageUrl: data.secure_url,  // URL รูปภาพที่อัปโหลด
@@ -62,46 +71,33 @@ async function uploadToCloudinary(file) {
 
 // ฟังก์ชันแสดงภาพที่อัปโหลด
 async function displayImage(file) {
-    const uploadedData = await uploadToCloudinary(file);
-    if (!uploadedData) return;
+     if (!uploadedData) return;
 
-    // แสดงภาพที่อัปโหลดในหน้า
     const imageWrapper = document.createElement("div");
-    imageWrapper.classList.add("image-wrapper");
+    imageWrapper.className = "image-wrapper";
 
-    const img = document.createElement("img");
-    img.src = uploadedData.imageUrl; // ใช้ URL จาก localStorage
+    imageWrapper.innerHTML = `
+        <img src="${uploadedData.imageUrl}" />
+        <button class="delete-btn">×</button>
+    `;
 
-    imageWrapper.appendChild(img);
-    uploadArea.appendChild(imageWrapper);
-    
-
-    // สร้างปุ่มลบ
-    const deleteBtn = document.createElement("button");
-    deleteBtn.classList.add("delete-btn");
-    deleteBtn.innerHTML = "×";
-
-    // เพิ่มฟังก์ชันลบภาพ
-    deleteBtn.addEventListener("click", (event) => {
-        event.stopPropagation();
-        // ลบจาก uploadArea
+    const deleteBtn = imageWrapper.querySelector(".delete-btn");
+    deleteBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
         uploadArea.removeChild(imageWrapper);
 
-        // ลบ public_id จาก localStorage
-        let uploadedImages = JSON.parse(localStorage.getItem('uploadedImages')) || [];
-        const indexToRemove = uploadedImages.indexOf(uploadedData.publicId);
-        if (indexToRemove !== -1) {
-            uploadedImages.splice(indexToRemove, 1);  // ลบ public_id ออกจากอาร์เรย์
-            localStorage.setItem('uploadedImages', JSON.stringify(uploadedImages));  // บันทึกการเปลี่ยนแปลงใน localStorage
-            console.log(uploadedImages);
+        const uploadedImages = JSON.parse(localStorage.getItem('uploadedImages')) || [];
+        const index = uploadedImages.indexOf(uploadedData.publicId);
+        if (index !== -1) {
+            uploadedImages.splice(index, 1);
+            localStorage.setItem('uploadedImages', JSON.stringify(uploadedImages));
         }
     });
-    
-    imageWrapper.appendChild(deleteBtn);
+
     uploadArea.appendChild(imageWrapper);
 }
 
-
+//แสดงตอนเข้าเว็บอีกครั้ง
 function loadImagesFromLocalStorage() {
     let uploadedImages = JSON.parse(localStorage.getItem('uploadedImages')) || [];
     
@@ -144,32 +140,52 @@ function loadImagesFromLocalStorage() {
 }
 
 
-// การจัดการเมื่อคลิกพื้นที่อัปโหลด
-const uploadArea = document.getElementById("upload-area");
-const fileInput = document.getElementById("file-input");
 
 
-// สร้าง observer เพื่อเช็คว่า uploadArea ไม่มีไฟล์แล้วหรือไม่
-const observer = new MutationObserver(() => {
-    updateUploadText();
-});
-observer.observe(uploadArea, { childList: true });
-updateUploadText();
+// อัปโหลดหลายไฟล์พร้อมกัน + แสดง preview ทันที
+function handleFiles(files) {
+    Array.from(files).forEach(file => {
+        // แสดง preview ทันที (ยังไม่รอ upload)
+        const previewWrapper = document.createElement("div");
+        previewWrapper.className = "image-wrapper";
+        previewWrapper.innerHTML = `<img src="${URL.createObjectURL(file)}" />`;
+        uploadArea.appendChild(previewWrapper);
 
+        // อัปโหลดจริงข้างหลัง
+        uploadToCloudinary(file).then(data => {
+            if (data) {
+                // แทนที่ preview ด้วย URL จริง
+                const img = previewWrapper.querySelector("img");
+                img.src = data.imageUrl;
 
-uploadArea.addEventListener("click", (event) => {
-    if (event.target === uploadArea) {
-        fileInput.click(); // เปิด input file เมื่อคลิกที่ uploadArea
-    }
-});
+                // เพิ่มปุ่มลบและฟังก์ชันลบ
+                const deleteBtn = document.createElement("button");
+                deleteBtn.className = "delete-btn";
+                deleteBtn.innerHTML = "×";
+                deleteBtn.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    uploadArea.removeChild(previewWrapper);
 
-// การจัดการเมื่อเลือกไฟล์ผ่าน input
-fileInput.addEventListener("change", (e) => {
-    const files = e.target.files;
-    Array.from(files).forEach((file) => {
-        displayImage(file);
+                    const uploadedImages = JSON.parse(localStorage.getItem('uploadedImages')) || [];
+                    const index = uploadedImages.indexOf(data.publicId);
+                    if (index !== -1) {
+                        uploadedImages.splice(index, 1);
+                        localStorage.setItem('uploadedImages', JSON.stringify(uploadedImages));
+                    }
+                });
+                previewWrapper.appendChild(deleteBtn);
+            }
+        });
     });
+}
+
+// คลิกพื้นที่อัปโหลด
+uploadArea.addEventListener("click", (e) => {
+    if (e.target === uploadArea) fileInput.click();
 });
+
+// เลือกไฟล์
+fileInput.addEventListener("change", (e) => handleFiles(e.target.files));
 
 
 
@@ -234,7 +250,6 @@ async function re() {
                     uploadedImages.splice(indexToRemove, 1);  // ลบ public_id ออกจากอาร์เรย์
                     localStorage.setItem('uploadedImages', JSON.stringify(uploadedImages));  // บันทึกการเปลี่ยนแปลงใน localStorage
                 }
-                updateUploadText();
             });
 
             imageWrapper.appendChild(img);
@@ -369,7 +384,7 @@ function deleteA() {
 
     // รีเซ็ตค่า file input 
     fileInput.value = "";
-    updateUploadText();//เช็คว่าควรแสดงข้อความไหม
+
 
 }
 
@@ -414,6 +429,7 @@ window.onload = function() {
         localStorage.setItem('popupShown', 'true');
     }
 };
+
 
 
 
