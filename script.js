@@ -89,7 +89,7 @@ async function handleFiles(files) {
 
     // อัปโหลดทุกไฟล์พร้อมกัน
     const uploadPromises = previews.map(({ file, wrapper, img, overlay }) =>
-        fetch("https://api.cloudinary.com/v1_1/dmdhq3u7b/image/upload", {
+        fetch("https://api.cloudinary.com/v1_1/dprcsygxc/image/upload", {
             method: "POST",
             body: (() => {
                 const fd = new FormData();
@@ -152,7 +152,7 @@ function loadImagesFromLocalStorage() {
     
     uploadedImages.forEach(async (publicId) => {
         // ใช้ publicId เพื่อดึง URL ของภาพจาก Cloudinary
-        const imageUrl = `https://res.cloudinary.com/dmdhq3u7b/image/upload/v${new Date().getTime()}/${publicId}.jpg`; // หรือปรับ URL ตามที่ใช้
+        const imageUrl = `https://res.cloudinary.com/dprcsygxc/image/upload/v${new Date().getTime()}/${publicId}.jpg`; // หรือปรับ URL ตามที่ใช้
         // สร้าง image element
         const imageWrapper = document.createElement("div");
         imageWrapper.classList.add("image-wrapper");
@@ -211,7 +211,7 @@ async function re() {
     
     // ฟังก์ชันเพื่อตรวจสอบว่า Cloudinary ประมวลผลภาพเสร็จหรือยัง
     async function checkImageProcessingStatus(publicId) {
-        const imageUrl = `https://res.cloudinary.com/dmdhq3u7b/image/upload/e_background_removal/${publicId}`;
+        const imageUrl = `https://res.cloudinary.com/dprcsygxc/image/upload/e_background_removal/${publicId}`;
 
         let isImageReady = false;
         let retries = 10;  // กำหนดจำนวนการลองซ้ำหากภาพยังไม่เสร็จ
@@ -230,7 +230,7 @@ async function re() {
 
     for (const publicId of uploadedImages) {
         // สร้าง URL ของ Cloudinary โดยใส่ publicId ลงใน URL
-        const imageUrl = `https://res.cloudinary.com/dmdhq3u7b/image/upload/e_background_removal/${publicId}`;
+        const imageUrl = `https://res.cloudinary.com/dprcsygxc/image/upload/e_background_removal/${publicId}`;
 
         // เช็คสถานะภาพก่อนแสดง
         const isReady = await checkImageProcessingStatus(publicId);
@@ -287,7 +287,7 @@ async function en() {
 
     // ฟังก์ชันเพื่อตรวจสอบว่า Cloudinary ประมวลผลภาพเสร็จหรือยัง
     async function checkImageProcessingStatus(publicId) {
-        const imageUrl = `https://res.cloudinary.com/dmdhq3u7b/image/upload/e_enhance/${publicId}`;
+        const imageUrl = `https://res.cloudinary.com/dprcsygxc/image/upload/e_enhance/${publicId}`;
 
         let isImageReady = false;
         let retries = 10;  // กำหนดจำนวนการลองซ้ำหากภาพยังไม่เสร็จ
@@ -306,7 +306,7 @@ async function en() {
 
     for (const publicId of uploadedImages) {
         // ใช้ publicId แทน displayName
-        const imageUrl = `https://res.cloudinary.com/dmdhq3u7b/image/upload/e_enhance/${publicId}`;
+        const imageUrl = `https://res.cloudinary.com/dprcsygxc/image/upload/e_enhance/${publicId}`;
 
         // เช็คสถานะภาพก่อนแสดง
         const isReady = await checkImageProcessingStatus(publicId);
@@ -440,6 +440,7 @@ window.onload = function() {
         localStorage.setItem('popupShown', 'true');
     }
 };
+
 
 
 
