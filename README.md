@@ -1,4 +1,4 @@
-# ⭐ ตั๋งแต่งเตอร์เติม (TertungV1)
+# ⭐ TERTUNG
 
 ![Logo](https://peerapa13.github.io/tertungv1/img/DALL%C2%B7E%202025-01-21%2020.19.36%20-%20A%20minimalist%20and%20elegant%20logo%20design%20for%20the%20name%20'TERTUNG',%20incorporating%20unique%20shapes%20.webp)
 
