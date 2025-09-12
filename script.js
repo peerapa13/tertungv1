@@ -38,6 +38,7 @@ observer.observe(uploadArea, { childList: true });
 updateUploadText();
 
 
+
 // ===================
 // Event Delegation สำหรับปุ่มลบ
 // ===================
@@ -59,6 +60,24 @@ uploadArea.addEventListener("click", (e) => {
     }
 });
 
+// ===================
+// ฟังก์ชันตรวจสอบสถานะภาพจาก Cloudinary
+// ===================
+async function checkImageProcessingStatus(publicId, type = "e_background_removal", retries = 10, delay = 250) {
+    const imageUrl = `https://res.cloudinary.com/dprcsygxc/image/upload/${type}/${publicId}`;
+
+    while (retries > 0) {
+        try {
+            const response = await fetch(imageUrl, { method: 'HEAD' });
+            if (response.ok) return true; // ภาพพร้อมใช้งาน
+        } catch (err) {
+            console.error(err);
+        }
+        retries--;
+        await new Promise(resolve => setTimeout(resolve, delay));
+    }
+    return false; 
+}
 
 // ===================
 // ฟังก์ชันสร้าง preview ของไฟล์
@@ -93,9 +112,8 @@ function createImagePreview(file) {
     return { file, wrapper, img, overlay };
 }
 
-// ===================
+
 // ฟังก์ชันอัปโหลดไฟล์ทั้งหมด
-// ===================
 async function handleFiles(files) {
     const uploadedImages = JSON.parse(localStorage.getItem('uploadedImages')) || [];
 
@@ -114,9 +132,15 @@ async function handleFiles(files) {
 
             // อัปเดต preview
             img.src = data.secure_url;
-            img.style.opacity = "1";
+            img.style.opacity = "1";            
             wrapper.removeChild(overlay);
             wrapper.dataset.publicId = data.public_id;
+
+             // ปุ่มลบ 
+            const deleteBtn = document.createElement("button");
+            deleteBtn.className = "delete-btn";
+            deleteBtn.innerHTML = "×";
+            wrapper.appendChild(deleteBtn);
 
             uploadedImages.push(data.public_id);
             return data;
@@ -135,9 +159,7 @@ async function handleFiles(files) {
 
 
 
-// ===================
 // โหลดภาพจาก localStorage
-// ===================
 function loadImagesFromLocalStorage() {
     const uploadedImages = JSON.parse(localStorage.getItem('uploadedImages')) || [];
 
@@ -148,7 +170,7 @@ function loadImagesFromLocalStorage() {
         wrapper.dataset.publicId = publicId;
 
         const img = document.createElement("img");
-        img.src = `https://res.cloudinary.com/dprcsygxc/image/upload/${publicId}.jpg`; // ปรับ URL ตามที่ใช้
+        img.src = `https://res.cloudinary.com/dprcsygxc/image/upload/${publicId}.jpg`; 
         wrapper.appendChild(img);
 
         // ปุ่มลบ 
@@ -177,32 +199,12 @@ fileInput.addEventListener("change", (e) => handleFiles(e.target.files));
 
 
 
-
-
-// ฟังก์ชันตรวจสอบสถานะภาพจาก Cloudinary
-async function checkImageProcessingStatus(publicId, type = "e_background_removal", retries = 10, delay = 250) {
-    const imageUrl = `https://res.cloudinary.com/dprcsygxc/image/upload/${type}/${publicId}`;
-
-    while (retries > 0) {
-        try {
-            const response = await fetch(imageUrl, { method: 'HEAD' });
-            if (response.ok) return true; // ภาพพร้อมใช้งาน
-        } catch (err) {
-            console.error(err);
-        }
-        retries--;
-        await new Promise(resolve => setTimeout(resolve, delay));
-    }
-    return false; 
-}
-
-
-
-
-
 async function re() {
     uploadArea.innerHTML = '';  
     const uploadedImages = JSON.parse(localStorage.getItem('uploadedImages')) || [];
+    
+    // สร้าง preview
+    const previews = Array.from(files).map(file => createImagePreview(file));
 
     for (const publicId of uploadedImages) {
         const isReady = await checkImageProcessingStatus(publicId, "e_background_removal");
@@ -347,6 +349,7 @@ window.onload = function() {
         localStorage.setItem('popupShown', 'true');
     }
 };
+
 
 
 
