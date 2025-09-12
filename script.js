@@ -47,12 +47,11 @@ uploadArea.addEventListener("click", (e) => {
         const wrapper = e.target.closest(".image-wrapper");
         if (!wrapper) return;
 
-        const publicId = wrapper.dataset.publicId;
+        const url = wrapper.dataset.url;
         uploadArea.removeChild(wrapper);
 
-        // ลบ publicId จาก localStorage
         let uploadedImages = JSON.parse(localStorage.getItem('uploadedImages')) || [];
-        const index = uploadedImages.indexOf(publicId);
+        const index = uploadedImages.indexOf(url);
         if (index !== -1) {
             uploadedImages.splice(index, 1);
             localStorage.setItem('uploadedImages', JSON.stringify(uploadedImages));
@@ -140,30 +139,28 @@ function hideLoader() {
 
 
 
-// ฟังก์ชันอัปโหลดไฟล์ทั้งหมด//
 async function handleFiles(files) {
     if (!files || files.length === 0) return;
 
-    showLoader();  // แสดง loader
-
+    showLoader();
     const uploadedImages = JSON.parse(localStorage.getItem('uploadedImages')) || [];
 
-    // อัปโหลดไฟล์ทุกไฟล์พร้อมกัน
+    const apiKey = "0aee4c4792525d04ce7af1e6b7990cf6"; 
+
     const results = await Promise.all(Array.from(files).map(async (file) => {
         const fd = new FormData();
-        fd.append("file", file);
-        fd.append("upload_preset", "imgweb");
+        fd.append("image", file);
+        fd.append("key", apiKey);
 
-        const res = await fetch("https://api.cloudinary.com/v1_1/dprcsygxc/image/upload", { method: "POST", body: fd });
+        const res = await fetch("https://api.imgbb.com/1/upload", { method: "POST", body: fd });
         const data = await res.json();
 
-        // สร้าง element แสดงภาพและปุ่มลบทันที
         const wrapper = document.createElement("div");
         wrapper.className = "image-wrapper";
-        wrapper.dataset.publicId = data.public_id;
+        wrapper.dataset.url = data.data.url; // เก็บ URL 
 
         const img = document.createElement("img");
-        img.src = data.secure_url;
+        img.src = data.data.url;
         wrapper.appendChild(img);
 
         const deleteBtn = document.createElement("button");
@@ -173,31 +170,27 @@ async function handleFiles(files) {
 
         uploadArea.appendChild(wrapper);
 
-        uploadedImages.push(data.public_id);
-
+        uploadedImages.push(data.data.url);
         return data;
     }));
 
-    // บันทึก publicIds ลง localStorage
     localStorage.setItem('uploadedImages', JSON.stringify(uploadedImages));
-
-    hideLoader(); // ซ่อน loader หลัง upload เสร็จ
-
-    return results.map(r => ({ imageUrl: r.secure_url, publicId: r.public_id }));
+    hideLoader();
+    return results.map(r => ({ imageUrl: r.data.url }));
 }
 
 
 
+// ================= Load Images from LocalStorage =================
 function loadImagesFromLocalStorage() {
     const uploadedImages = JSON.parse(localStorage.getItem('uploadedImages')) || [];
-
-    for (const publicId of uploadedImages) {
+    uploadedImages.forEach(url => {
         const wrapper = document.createElement("div");
         wrapper.className = "image-wrapper";
-        wrapper.dataset.publicId = publicId;
+        wrapper.dataset.url = url;
 
         const img = document.createElement("img");
-        img.src = `https://res.cloudinary.com/dprcsygxc/image/upload/${publicId}.jpg`;
+        img.src = url;
         wrapper.appendChild(img);
 
         const deleteBtn = document.createElement("button");
@@ -206,7 +199,7 @@ function loadImagesFromLocalStorage() {
         wrapper.appendChild(deleteBtn);
 
         uploadArea.appendChild(wrapper);
-    }
+    });
 }
 
 
@@ -227,6 +220,7 @@ fileInput.addEventListener("change", (e) => handleFiles(e.target.files));
 
 async function re() {
     showLoader();
+    uploadArea.innerHTML = '';
 
     const uploadedImages = JSON.parse(localStorage.getItem('uploadedImages')) || [];
 
@@ -261,6 +255,7 @@ async function re() {
 
 async function en() {
     showLoader();
+    uploadArea.innerHTML = '';
 
     const uploadedImages = JSON.parse(localStorage.getItem('uploadedImages')) || [];
 
@@ -382,6 +377,7 @@ window.onload = function() {
         localStorage.setItem('popupShown', 'true');
     }
 };
+
 
 
 
