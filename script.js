@@ -11,18 +11,6 @@ function clearUploadedImages() {
     localStorage.removeItem('uploadedImages');  // ลบข้อมูลที่เก็บไว้ใน uploadedImages
 }
 
-// ฟังก์ชันสำหรับแสดง popup ตอนโหลดหน้า
-window.onload = function() {
-    loadImagesFromLocalStorage(); 
-    // ตรวจสอบว่า popup แสดงไปแล้วหรือยัง
-    if (!localStorage.getItem('popupShown')) {
-        // ถ้ายังไม่แสดง popup, แสดง popup
-        document.getElementById('popupOverlay').style.display = 'block';
-
-        // ตั้งค่าใน localStorage ว่ากล่อง popup แสดงแล้ว
-        localStorage.setItem('popupShown', 'true');
-    }
-};
 
 
 //เช็คว่าควรแสดงข้อความไหม
@@ -439,5 +427,17 @@ document.getElementById("removeAll").addEventListener("click", () => {
 });
 
 
+// ฟังก์ชันสำหรับแสดง popup ตอนโหลดหน้า
+window.onload = function() {
+    loadImagesFromLocalStorage(); 
+    // ตรวจสอบว่า popup แสดงไปแล้วหรือยัง
+    if (!localStorage.getItem('popupShown')) {
+        // ถ้ายังไม่แสดง popup, แสดง popup
+        document.getElementById('popupOverlay').style.display = 'block';
+
+        // ตั้งค่าใน localStorage ว่ากล่อง popup แสดงแล้ว
+        localStorage.setItem('popupShown', 'true');
+    }
+};
 
 
