@@ -113,6 +113,67 @@ function createImagePreview(file) {
 }
 
 
+
+// ===================
+// สร้าง overlay loader
+// ===================
+function showLoader() {
+    let loader = document.getElementById("loader-overlay");
+    if (!loader) {
+        loader = document.createElement("div");
+        loader.id = "loader-overlay";
+        loader.style.position = "fixed";
+        loader.style.top = "0";
+        loader.style.left = "0";
+        loader.style.width = "100vw";
+        loader.style.height = "100vh";
+        loader.style.background = "rgba(0,0,0,0.5)";
+        loader.style.zIndex = "9999"; 
+        loader.style.display = "flex";
+        loader.style.alignItems = "center";
+        loader.style.justifyContent = "center";
+        loader.style.flexDirection = "column";
+        // สร้าง spinner
+        const spinner = document.createElement("div");
+        spinner.style.border = "8px solid #f3f3f3";
+        spinner.style.borderTop = "8px solid #3498db";
+        spinner.style.borderRadius = "50%";
+        spinner.style.width = "60px";
+        spinner.style.height = "60px";
+        spinner.style.animation = "spin 1s linear infinite";
+        loader.appendChild(spinner);
+        // ข้อความ
+        const text = document.createElement("div");
+        text.innerText = "Processing...";
+        text.style.color = "white";
+        text.style.fontSize = "20px";
+        text.style.marginTop = "12px";
+        loader.appendChild(text);
+
+        document.body.appendChild(loader);
+        // ใส่ keyframes สำหรับ spinner
+        const style = document.createElement("style");
+        style.innerHTML = `
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    loader.style.display = "flex";
+}
+function hideLoader() {
+    const loader = document.getElementById("loader-overlay");
+    if (loader) loader.style.display = "none";
+}
+
+
+
+
+
+
+
 // ฟังก์ชันอัปโหลดไฟล์ทั้งหมด
 async function handleFiles(files) {
     const uploadedImages = JSON.parse(localStorage.getItem('uploadedImages')) || [];
@@ -200,11 +261,10 @@ fileInput.addEventListener("change", (e) => handleFiles(e.target.files));
 
 
 async function re() {
+    showLoader();
     uploadArea.innerHTML = '';  
     const uploadedImages = JSON.parse(localStorage.getItem('uploadedImages')) || [];
     
-    // สร้าง preview
-    const previews = Array.from(files).map(file => createImagePreview(file));
 
     for (const publicId of uploadedImages) {
         const isReady = await checkImageProcessingStatus(publicId, "e_background_removal");
@@ -227,12 +287,14 @@ async function re() {
             console.log(`Image with publicId ${publicId} is not ready yet.`);
         }
     }
+     hideLoader();
 }
 
 
 
 
 async function en() {
+    showLoader();
     uploadArea.innerHTML = '';  
     const uploadedImages = JSON.parse(localStorage.getItem('uploadedImages')) || [];
 
@@ -258,6 +320,7 @@ async function en() {
             console.log(`Image with publicId ${publicId} is not ready yet.`);
         }
     }
+     hideLoader();
 }
 
 
@@ -349,6 +412,7 @@ window.onload = function() {
         localStorage.setItem('popupShown', 'true');
     }
 };
+
 
 
 
