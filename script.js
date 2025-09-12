@@ -79,40 +79,6 @@ async function checkImageProcessingStatus(publicId, type = "e_background_removal
     return false; 
 }
 
-// ===================
-// ฟังก์ชันสร้าง preview ของไฟล์
-// ===================
-function createImagePreview(file) {
-    const wrapper = document.createElement("div");
-    wrapper.className = "image-wrapper";
-    wrapper.style.position = "relative";
-
-    const img = document.createElement("img");
-    img.src = URL.createObjectURL(file);
-    img.style.opacity = "0.5"; // บอกว่ายังอัปโหลดไม่เสร็จ
-    wrapper.appendChild(img);
-
-    // overlay "Uploading..."
-    const overlay = document.createElement("div");
-    overlay.innerText = "Uploading...";
-    overlay.style.position = "absolute";
-    overlay.style.top = "50%";
-    overlay.style.left = "50%";
-    overlay.style.transform = "translate(-50%, -50%)";
-    overlay.style.color = "white";
-    overlay.style.background = "rgba(0,0,0,0.6)";
-    overlay.style.padding = "4px 8px";
-    overlay.style.borderRadius = "6px";
-    overlay.style.fontSize = "14px";
-    wrapper.appendChild(overlay);
-    
-
-    uploadArea.appendChild(wrapper);
-
-    return { file, wrapper, img, overlay };
-}
-
-
 
 // ===================
 // สร้าง overlay loader
@@ -174,74 +140,73 @@ function hideLoader() {
 
 
 
-// ฟังก์ชันอัปโหลดไฟล์ทั้งหมด
+// ฟังก์ชันอัปโหลดไฟล์ทั้งหมด//
 async function handleFiles(files) {
+    if (!files || files.length === 0) return;
+
+    showLoader();  // แสดง loader
+
     const uploadedImages = JSON.parse(localStorage.getItem('uploadedImages')) || [];
 
-    // สร้าง preview
-    const previews = Array.from(files).map(file => createImagePreview(file));
+    // อัปโหลดไฟล์ทุกไฟล์พร้อมกัน
+    const results = await Promise.all(Array.from(files).map(async (file) => {
+        const fd = new FormData();
+        fd.append("file", file);
+        fd.append("upload_preset", "imgweb");
 
-    // อัปโหลดทุกไฟล์พร้อมกัน
-    const results = await Promise.all(previews.map(async ({ file, wrapper, img, overlay }) => {
-        try {
-            const fd = new FormData();
-            fd.append("file", file);
-            fd.append("upload_preset", "imgweb");
+        const res = await fetch("https://api.cloudinary.com/v1_1/dprcsygxc/image/upload", { method: "POST", body: fd });
+        const data = await res.json();
 
-            const res = await fetch("https://api.cloudinary.com/v1_1/dprcsygxc/image/upload", { method: "POST", body: fd });
-            const data = await res.json();
-
-            // อัปเดต preview
-            img.src = data.secure_url;
-            img.style.opacity = "1";            
-            wrapper.removeChild(overlay);
-            wrapper.dataset.publicId = data.public_id;
-
-             // ปุ่มลบ 
-            const deleteBtn = document.createElement("button");
-            deleteBtn.className = "delete-btn";
-            deleteBtn.innerHTML = "×";
-            wrapper.appendChild(deleteBtn);
-
-            uploadedImages.push(data.public_id);
-            return data;
-        } catch (err) {
-            wrapper.remove(); // ลบ preview ถ้า upload fail
-            return null;
-        }
-    }));
-
-    // เก็บ publicId ทั้งหมด
-    localStorage.setItem('uploadedImages', JSON.stringify(uploadedImages));
-
-    return results.filter(r => r !== null).map(r => ({ imageUrl: r.secure_url, publicId: r.public_id }));
-}
-
-
-
-
-// โหลดภาพจาก localStorage
-function loadImagesFromLocalStorage() {
-    const uploadedImages = JSON.parse(localStorage.getItem('uploadedImages')) || [];
-
-    uploadedImages.forEach(publicId => {
-        // สร้าง wrapper โดยใช้ createImagePreview แต่ไม่ต้อง overlay
+        // สร้าง element แสดงภาพและปุ่มลบทันที
         const wrapper = document.createElement("div");
         wrapper.className = "image-wrapper";
-        wrapper.dataset.publicId = publicId;
+        wrapper.dataset.publicId = data.public_id;
 
         const img = document.createElement("img");
-        img.src = `https://res.cloudinary.com/dprcsygxc/image/upload/${publicId}.jpg`; 
+        img.src = data.secure_url;
         wrapper.appendChild(img);
 
-        // ปุ่มลบ 
         const deleteBtn = document.createElement("button");
         deleteBtn.className = "delete-btn";
         deleteBtn.innerHTML = "×";
         wrapper.appendChild(deleteBtn);
 
         uploadArea.appendChild(wrapper);
-    });
+
+        uploadedImages.push(data.public_id);
+
+        return data;
+    }));
+
+    // บันทึก publicIds ลง localStorage
+    localStorage.setItem('uploadedImages', JSON.stringify(uploadedImages));
+
+    hideLoader(); // ซ่อน loader หลัง upload เสร็จ
+
+    return results.map(r => ({ imageUrl: r.secure_url, publicId: r.public_id }));
+}
+
+
+
+function loadImagesFromLocalStorage() {
+    const uploadedImages = JSON.parse(localStorage.getItem('uploadedImages')) || [];
+
+    for (const publicId of uploadedImages) {
+        const wrapper = document.createElement("div");
+        wrapper.className = "image-wrapper";
+        wrapper.dataset.publicId = publicId;
+
+        const img = document.createElement("img");
+        img.src = `https://res.cloudinary.com/dprcsygxc/image/upload/${publicId}.jpg`;
+        wrapper.appendChild(img);
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.className = "delete-btn";
+        deleteBtn.innerHTML = "×";
+        wrapper.appendChild(deleteBtn);
+
+        uploadArea.appendChild(wrapper);
+    }
 }
 
 
@@ -261,7 +226,6 @@ fileInput.addEventListener("change", (e) => handleFiles(e.target.files));
 
 
 async function re() {
-    showLoader();
     uploadArea.innerHTML = '';  
     const uploadedImages = JSON.parse(localStorage.getItem('uploadedImages')) || [];
     
@@ -287,14 +251,12 @@ async function re() {
             console.log(`Image with publicId ${publicId} is not ready yet.`);
         }
     }
-     hideLoader();
 }
 
 
 
 
 async function en() {
-    showLoader();
     uploadArea.innerHTML = '';  
     const uploadedImages = JSON.parse(localStorage.getItem('uploadedImages')) || [];
 
@@ -320,7 +282,6 @@ async function en() {
             console.log(`Image with publicId ${publicId} is not ready yet.`);
         }
     }
-     hideLoader();
 }
 
 
@@ -382,12 +343,16 @@ function deleteA() {
 /* ส่วนของการกดปุ่มเรียกฟังชั่น */
 //ลบพื้นหลัง
 document.getElementById('removebg').addEventListener('click', () => {
+    showLoader();
     re()
+    hideLoader();
 });
 
 //แก้ไข้ภาพ
 document.getElementById('Enhancingimages').addEventListener('click', () => {
+    showLoader();
     en()
+    hideLoader();
 });
 
 //โหลดภาพ
@@ -403,7 +368,9 @@ document.getElementById("removeAll").addEventListener("click", () => {
 
 // ฟังก์ชันสำหรับแสดง popup ตอนโหลดหน้า
 window.onload = function() {
-    loadImagesFromLocalStorage(); 
+    showLoader();
+    loadImagesFromLocalStorage();
+    hideLoader();
     // ตรวจสอบว่า popup แสดงไปแล้วหรือยัง
     if (!localStorage.getItem('popupShown')) {
         // ถ้ายังไม่แสดง popup, แสดง popup
@@ -412,6 +379,7 @@ window.onload = function() {
         localStorage.setItem('popupShown', 'true');
     }
 };
+
 
 
 
