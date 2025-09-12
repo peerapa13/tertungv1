@@ -227,16 +227,16 @@ fileInput.addEventListener("change", (e) => handleFiles(e.target.files));
 
 async function re() {
     showLoader();
-    uploadArea.innerHTML = '';  
-    const uploadedImages = JSON.parse(localStorage.getItem('uploadedImages')) || [];
-    
 
-    for (const publicId of uploadedImages) {
+    const uploadedImages = JSON.parse(localStorage.getItem('uploadedImages')) || [];
+
+    // map publicId เป็น Promise ของ checkImageProcessingStatus
+    const promises = uploadedImages.map(async (publicId) => {
         const isReady = await checkImageProcessingStatus(publicId, "e_background_removal");
 
         if (isReady) {
-            const imageWrapper = document.createElement("div");
-            imageWrapper.classList.add("image-wrapper");
+            const wrapper = document.createElement("div");
+            wrapper.classList.add("image-wrapper");
 
             const img = document.createElement("img");
             img.src = `https://res.cloudinary.com/dprcsygxc/image/upload/e_background_removal/${publicId}`;
@@ -245,30 +245,31 @@ async function re() {
             deleteBtn.classList.add("delete-btn");
             deleteBtn.innerHTML = "×";
 
-            imageWrapper.appendChild(img);
-            imageWrapper.appendChild(deleteBtn);
-            uploadArea.appendChild(imageWrapper);
-        } else {
-            console.log(`Image with publicId ${publicId} is not ready yet.`);
+            wrapper.appendChild(img);
+            wrapper.appendChild(deleteBtn);
+            uploadArea.appendChild(wrapper);
         }
-    }
-    hideLoader();
-}
+    });
 
+    // รอทุกภาพเสร็จพร้อมกัน
+    await Promise.all(promises);
+
+    hideLoader(); // จะซ่อนหลังทุกภาพโหลดเสร็จ
+}
 
 
 
 async function en() {
     showLoader();
-    uploadArea.innerHTML = '';  
+
     const uploadedImages = JSON.parse(localStorage.getItem('uploadedImages')) || [];
 
-    for (const publicId of uploadedImages) {
+    const promises = uploadedImages.map(async (publicId) => {
         const isReady = await checkImageProcessingStatus(publicId, "e_enhance");
 
         if (isReady) {
-            const imageWrapper = document.createElement("div");
-            imageWrapper.classList.add("image-wrapper");
+            const wrapper = document.createElement("div");
+            wrapper.classList.add("image-wrapper");
 
             const img = document.createElement("img");
             img.src = `https://res.cloudinary.com/dprcsygxc/image/upload/e_enhance/${publicId}`;
@@ -277,16 +278,18 @@ async function en() {
             deleteBtn.classList.add("delete-btn");
             deleteBtn.innerHTML = "×";
 
-
-            imageWrapper.appendChild(img);
-            imageWrapper.appendChild(deleteBtn);
-            uploadArea.appendChild(imageWrapper);
-        } else {
-            console.log(`Image with publicId ${publicId} is not ready yet.`);
+            wrapper.appendChild(img);
+            wrapper.appendChild(deleteBtn);
+            uploadArea.appendChild(wrapper);
         }
-    }
-    hideLoader();
+    });
+
+    // รอทุกภาพเสร็จพร้อมกัน
+    await Promise.all(promises);
+
+    hideLoader(); // ซ่อน loader หลังทุกภาพโหลดเสร็จ
 }
+
 
 
 async function downloadA(){
@@ -379,6 +382,7 @@ window.onload = function() {
         localStorage.setItem('popupShown', 'true');
     }
 };
+
 
 
 
