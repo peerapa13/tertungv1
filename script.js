@@ -118,33 +118,6 @@ async function handleFiles(files) {
 }
 
 
-// ฟังก์ชันแสดงภาพที่อัปโหลด
-async function displayImage(file) {
-     if (!uploadedData) return;
-
-    const imageWrapper = document.createElement("div");
-    imageWrapper.className = "image-wrapper";
-
-    imageWrapper.innerHTML = `
-        <img src="${uploadedData.imageUrl}" />
-        <button class="delete-btn">×</button>
-    `;
-
-    const deleteBtn = imageWrapper.querySelector(".delete-btn");
-    deleteBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        uploadArea.removeChild(imageWrapper);
-
-        const uploadedImages = JSON.parse(localStorage.getItem('uploadedImages')) || [];
-        const index = uploadedImages.indexOf(uploadedData.publicId);
-        if (index !== -1) {
-            uploadedImages.splice(index, 1);
-            localStorage.setItem('uploadedImages', JSON.stringify(uploadedImages));
-        }
-    });
-
-    uploadArea.appendChild(imageWrapper);
-}
 
 //แสดงตอนเข้าเว็บอีกครั้ง
 function loadImagesFromLocalStorage() {
