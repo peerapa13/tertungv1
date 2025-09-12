@@ -145,19 +145,21 @@ async function handleFiles(files) {
     showLoader();
     const uploadedImages = JSON.parse(localStorage.getItem('uploadedImages')) || [];
 
-    const apiKey = "0aee4c4792525d04ce7af1e6b7990cf6"; 
+    const apiKey = "Y0aee4c4792525d04ce7af1e6b7990cf6"; 
+    const albumId = "R7jsvg";     
 
     const results = await Promise.all(Array.from(files).map(async (file) => {
         const fd = new FormData();
         fd.append("image", file);
         fd.append("key", apiKey);
+        fd.append("album", albumId);   
 
         const res = await fetch("https://api.imgbb.com/1/upload", { method: "POST", body: fd });
         const data = await res.json();
 
         const wrapper = document.createElement("div");
         wrapper.className = "image-wrapper";
-        wrapper.dataset.url = data.data.url; // เก็บ URL 
+        wrapper.dataset.url = data.data.url;
 
         const img = document.createElement("img");
         img.src = data.data.url;
@@ -178,7 +180,6 @@ async function handleFiles(files) {
     hideLoader();
     return results.map(r => ({ imageUrl: r.data.url }));
 }
-
 
 
 // ================= Load Images from LocalStorage =================
@@ -377,6 +378,7 @@ window.onload = function() {
         localStorage.setItem('popupShown', 'true');
     }
 };
+
 
 
 
