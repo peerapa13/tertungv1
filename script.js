@@ -145,7 +145,7 @@ async function handleFiles(files) {
     showLoader();
     const uploadedImages = JSON.parse(localStorage.getItem('uploadedImages')) || [];
 
-    const apiKey = "Y0aee4c4792525d04ce7af1e6b7990cf6"; 
+    const apiKey = "0aee4c4792525d04ce7af1e6b7990cf6"; 
     const albumId = "R7jsvg";     
 
     const results = await Promise.all(Array.from(files).map(async (file) => {
@@ -378,6 +378,7 @@ window.onload = function() {
         localStorage.setItem('popupShown', 'true');
     }
 };
+
 
 
 
