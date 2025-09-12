@@ -226,6 +226,7 @@ fileInput.addEventListener("change", (e) => handleFiles(e.target.files));
 
 
 async function re() {
+    showLoader();
     uploadArea.innerHTML = '';  
     const uploadedImages = JSON.parse(localStorage.getItem('uploadedImages')) || [];
     
@@ -251,12 +252,14 @@ async function re() {
             console.log(`Image with publicId ${publicId} is not ready yet.`);
         }
     }
+    hideLoader();
 }
 
 
 
 
 async function en() {
+    showLoader();
     uploadArea.innerHTML = '';  
     const uploadedImages = JSON.parse(localStorage.getItem('uploadedImages')) || [];
 
@@ -282,6 +285,7 @@ async function en() {
             console.log(`Image with publicId ${publicId} is not ready yet.`);
         }
     }
+    hideLoader();
 }
 
 
@@ -343,16 +347,12 @@ function deleteA() {
 /* ส่วนของการกดปุ่มเรียกฟังชั่น */
 //ลบพื้นหลัง
 document.getElementById('removebg').addEventListener('click', () => {
-    showLoader();
     re()
-    hideLoader();
 });
 
 //แก้ไข้ภาพ
 document.getElementById('Enhancingimages').addEventListener('click', () => {
-    showLoader();
     en()
-    hideLoader();
 });
 
 //โหลดภาพ
@@ -379,6 +379,7 @@ window.onload = function() {
         localStorage.setItem('popupShown', 'true');
     }
 };
+
 
 
 
