@@ -146,13 +146,11 @@ async function handleFiles(files) {
     const uploadedImages = JSON.parse(localStorage.getItem('uploadedImages')) || [];
 
     const apiKey = "0aee4c4792525d04ce7af1e6b7990cf6"; 
-    const albumId = "R7jsvg";     
 
     const results = await Promise.all(Array.from(files).map(async (file) => {
         const fd = new FormData();
         fd.append("image", file);
         fd.append("key", apiKey);
-        fd.append("album", albumId);   
 
         try {
             const res = await fetch("https://api.imgbb.com/1/upload", { method: "POST", body: fd });
@@ -393,6 +391,7 @@ window.onload = function() {
         localStorage.setItem('popupShown', 'true');
     }
 };
+
 
 
 
