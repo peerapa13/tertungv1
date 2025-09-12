@@ -154,32 +154,47 @@ async function handleFiles(files) {
         fd.append("key", apiKey);
         fd.append("album", albumId);   
 
-        const res = await fetch("https://api.imgbb.com/1/upload", { method: "POST", body: fd });
-        const data = await res.json();
+        try {
+            const res = await fetch("https://api.imgbb.com/1/upload", { method: "POST", body: fd });
+            const data = await res.json();
 
-        const wrapper = document.createElement("div");
-        wrapper.className = "image-wrapper";
-        wrapper.dataset.url = data.data.url;
+            if (!res.ok || !data.success) {
+                console.error("Upload failed:", data);
+                return null;
+            }
 
-        const img = document.createElement("img");
-        img.src = data.data.url;
-        wrapper.appendChild(img);
+            const url = data.data.url;
 
-        const deleteBtn = document.createElement("button");
-        deleteBtn.className = "delete-btn";
-        deleteBtn.innerHTML = "×";
-        wrapper.appendChild(deleteBtn);
+            const wrapper = document.createElement("div");
+            wrapper.className = "image-wrapper";
+            wrapper.dataset.url = url;
 
-        uploadArea.appendChild(wrapper);
+            const img = document.createElement("img");
+            img.src = url;
+            wrapper.appendChild(img);
 
-        uploadedImages.push(data.data.url);
-        return data;
+            const deleteBtn = document.createElement("button");
+            deleteBtn.className = "delete-btn";
+            deleteBtn.innerHTML = "×";
+            wrapper.appendChild(deleteBtn);
+
+            uploadArea.appendChild(wrapper);
+
+            uploadedImages.push(url);
+            return url;
+        } catch (err) {
+            console.error("Upload error:", err);
+            return null;
+        }
     }));
 
+    const successfulUploads = results.filter(Boolean);
     localStorage.setItem('uploadedImages', JSON.stringify(uploadedImages));
+
     hideLoader();
-    return results.map(r => ({ imageUrl: r.data.url }));
+    return successfulUploads.map(url => ({ imageUrl: url }));
 }
+
 
 
 // ================= Load Images from LocalStorage =================
@@ -378,6 +393,7 @@ window.onload = function() {
         localStorage.setItem('popupShown', 'true');
     }
 };
+
 
 
 
