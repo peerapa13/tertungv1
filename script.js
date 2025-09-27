@@ -190,11 +190,12 @@ window.onload = function() {
     // ตรวจสอบว่า popup แสดงไปแล้วหรือยัง
     if (!localStorage.getItem('popupShown')) {
         // ถ้ายังไม่แสดง popup, แสดง popup
-        document.getElementById('popupOverlay').style.display = 'block';
+        document.getElementById('popupOverlay');
         // ตั้งค่าใน localStorage ว่ากล่อง popup แสดงแล้ว
         localStorage.setItem('popupShown', 'true');
     }
 };
+
 
 
 
