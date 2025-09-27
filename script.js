@@ -132,8 +132,7 @@ function addImageToDOM(base64, id=null) {
     const delBtn = document.createElement("button");
     delBtn.innerText = "x";
     delBtn.classList.add("delete-btn");
-    delBtn.addEventListener("click", (e) => {
-        e.stopPropagation(); 
+    delBtn.addEventListener("click", (e) => { 
         wrapper.remove();
         if(id) deleteImageFromDB(id);
         updateUploadText();
@@ -158,7 +157,7 @@ fileInput.addEventListener("change", e => {
             const requestAdd = store.add({ data: base64 });
 
             requestAdd.onsuccess = e => {
-                const id = e.target.result; // id ของภาพใน DB
+                const id = e.target.result; 
                 addImageToDOM(base64, id);
             };
         };
@@ -211,4 +210,5 @@ window.onload = function() {
         localStorage.setItem('popupShown', 'true');
     }
 };
+
 
