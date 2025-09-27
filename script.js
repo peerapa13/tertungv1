@@ -211,14 +211,9 @@ document.getElementById("downloadAll").addEventListener("click", () => {
     });
 });
 
-// ==================== เรียกใช้ฟังก์ชั่นลบพื้นหลัง ====================
-document.getElementById("removebg").addEventListener("click", () => {
-    const script = document.createElement("script");
-    script.src = "removebg.js";
-    script.onload = () => {
-        removeBackgroundFromAllImages(db);
-    };
-    document.body.appendChild(script);
+// ==================== เรียกใช้ฟังก์ชั่น ====================
+document.getElementById("removebg").addEventListener("click", ()=>{
+    removeBackgroundFromAllImages(db);
 });
 
 // ==================== popup ====================
