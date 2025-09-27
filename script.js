@@ -211,22 +211,11 @@ document.getElementById("downloadAll").addEventListener("click", () => {
 });
 //======================เรียกใช้ฟังชั่นแก้ไขภาพ+++++++++++++++++++++
 document.getElementById("removebg").addEventListener("click", () => {
-    const script = document.createElement("script");
-    script.src = "removebg.js";
-    script.onload = () => {
-        removeBackgroundFromAllImages(); 
-    };
-    document.body.appendChild(script);
+    removeBackgroundFromAllImages();
 });
 
-
 document.getElementById("Enhancingimages").addEventListener("click", () => {
-    const script = document.createElement("script");
-    script.src = "Enhancingimages.js";
-    script.onload = () => {
-        EnhancingimagesFromAllImages(); 
-    };
-    document.body.appendChild(script);
+    EnhancingimagesFromAllImages(); 
 });
 // ==================== popup เมื่อโหลดหน้า ====================
 window.onload = function() {
@@ -236,5 +225,6 @@ window.onload = function() {
         localStorage.setItem('popupShown', 'true');
     }
 };
+
 
 
