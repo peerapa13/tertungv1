@@ -90,27 +90,17 @@ request.onerror = e => {
 // ==================== พรีวิวรูปใหญ่ ====================
 const previewOverlay = document.createElement("div");
 previewOverlay.id = "preview-overlay";
-previewOverlay.style.position = "fixed";
-previewOverlay.style.top = 0;
-previewOverlay.style.left = 0;
-previewOverlay.style.width = "100vw";
-previewOverlay.style.height = "100vh";
-previewOverlay.style.background = "rgba(0,0,0,0.8)";
-previewOverlay.style.display = "none";
-previewOverlay.style.justifyContent = "center";
-previewOverlay.style.alignItems = "center";
-previewOverlay.style.zIndex = "10000";
-
+previewOverlay.style.cssText = `
+    position: fixed; top:0; left:0; width:100vw; height:100vh;
+    background: rgba(0,0,0,0.8); display:none;
+    justify-content:center; align-items:center; z-index:10000;
+`;
 const previewImg = document.createElement("img");
-previewImg.style.maxWidth = "90%";
-previewImg.style.maxHeight = "90%";
-previewImg.style.borderRadius = "10px";
+previewImg.style.cssText = "max-width:90%; max-height:90%; border-radius:10px;";
 previewOverlay.appendChild(previewImg);
-
 previewOverlay.addEventListener("click", () => {
     previewOverlay.style.display = "none";
 });
-
 document.body.appendChild(previewOverlay);
 
 // ==================== addImageToDOM ====================
@@ -121,9 +111,8 @@ function addImageToDOM(base64, id=null) {
     const img = document.createElement("img");
     img.src = base64;
 
-    // คลิกรูปเพื่อเปิด preview
-    img.addEventListener("click", (e) => {
-        e.stopPropagation(); 
+    // คลิกรูปเพื่อ preview
+    img.addEventListener("click", () => {
         previewImg.src = base64;
         previewOverlay.style.display = "flex";
     });
@@ -134,7 +123,7 @@ function addImageToDOM(base64, id=null) {
     delBtn.innerText = "x";
     delBtn.classList.add("delete-btn");
     delBtn.addEventListener("click", (e) => { 
-        e.stopPropagation(); 
+        e.stopPropagation(); // ไม่ให้ trigger preview
         wrapper.remove();
         if(id) deleteImageFromDB(id);
         updateUploadText();
@@ -145,7 +134,6 @@ function addImageToDOM(base64, id=null) {
     updateUploadText();
 }
 
-
 // ==================== อัพโหลด + เซฟ DB ====================
 fileInput.addEventListener("change", e => {
     Array.from(e.target.files).forEach(file => {
@@ -153,7 +141,6 @@ fileInput.addEventListener("change", e => {
         reader.onload = event => {
             const base64 = event.target.result;
 
-            // เซฟลง IndexedDB
             const tx = db.transaction("images", "readwrite");
             const store = tx.objectStore("images");
             const requestAdd = store.add({ data: base64 });
@@ -187,11 +174,11 @@ document.getElementById("removeAll").addEventListener("click", () => {
 
 // ==================== คลิกพื้นที่เพื่อเลือกไฟล์ ====================
 uploadArea.addEventListener("click", (e) => {
+    // คลิกพื้นที่ว่าง (ไม่ใช่รูปหรือปุ่มลบ) เปิดอัพโหลด
     if (!e.target.closest(".image-wrapper") && !e.target.classList.contains("delete-btn")) {
         fileInput.click();
     }
 });
-
 
 // ==================== โหลดภาพจาก IndexedDB ====================
 function loadImagesFromDB() {
@@ -208,12 +195,9 @@ function loadImagesFromDB() {
 
 // ==================== popup เมื่อโหลดหน้า ====================
 window.onload = function() {
+    loadImagesFromDB()
     if (!localStorage.getItem('popupShown')) {
         showPopup();
         localStorage.setItem('popupShown', 'true');
     }
 };
-
-
-
-
