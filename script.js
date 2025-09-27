@@ -212,34 +212,71 @@ document.getElementById("downloadAll").addEventListener("click", () => {
 });
 
 // ==================== ลบพื้นหลัง ====================
-document.getElementById("removebg").addEventListener("click",()=>{
+document.getElementById("removebg").addEventListener("click", () => {
     const wrappers = uploadArea.querySelectorAll(".image-wrapper");
-    if(!db){ alert("DB ยังโหลดไม่เสร็จ"); return;}
-    wrappers.forEach(wrapper=>{
+    if (!db) {
+        alert("DB ยังโหลดไม่เสร็จ");
+        return;
+    }
+
+    // สร้าง overlay สำหรับ preview
+    let previewOverlay = document.getElementById("preview-overlay");
+    let previewImg;
+    if (!previewOverlay) {
+        previewOverlay = document.createElement("div");
+        previewOverlay.id = "preview-overlay";
+        previewOverlay.style.cssText = `
+            position: fixed; top:0; left:0; width:100vw; height:100vh;
+            background: rgba(0,0,0,0.8); display:none;
+            justify-content:center; align-items:center; z-index:10000;
+        `;
+        previewImg = document.createElement("img");
+        previewImg.style.cssText = "max-width:90%; max-height:90%; border-radius:10px;";
+        previewOverlay.appendChild(previewImg);
+        previewOverlay.addEventListener("click", () => {
+            previewOverlay.style.display = "none";
+        });
+        document.body.appendChild(previewOverlay);
+    } else {
+        previewImg = previewOverlay.querySelector("img");
+    }
+
+    wrappers.forEach(wrapper => {
         const img = wrapper.querySelector("img");
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext("2d");
         canvas.width = img.naturalWidth;
         canvas.height = img.naturalHeight;
-        ctx.drawImage(img,0,0);
-        const imageData = ctx.getImageData(0,0,canvas.width,canvas.height);
+        ctx.drawImage(img, 0, 0);
+
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const data = imageData.data;
-        for(let i=0;i<data.length;i+=4){
-            const r=data[i],g=data[i+1],b=data[i+2];
-            const distance = Math.sqrt((r-255)**2+(g-255)**2+(b-255)**2);
-            if(distance<40) data[i+3]=0;
+        for (let i = 0; i < data.length; i += 4) {
+            const r = data[i], g = data[i+1], b = data[i+2];
+            const distance = Math.sqrt((r - 255)**2 + (g - 255)**2 + (b - 255)**2);
+            if (distance < 40) data[i+3] = 0; // ทำให้โปร่งใส
         }
-        ctx.putImageData(imageData,0,0);
+        ctx.putImageData(imageData, 0, 0);
+
         const newBase64 = canvas.toDataURL("image/png");
         img.src = newBase64;
+
         // อัปเดต DB
-        if(wrapper.dataset.id){
-            const tx = db.transaction("images","readwrite");
-            tx.objectStore("images").put({id:Number(wrapper.dataset.id),data:newBase64});
+        if (wrapper.dataset.id) {
+            const tx = db.transaction("images", "readwrite");
+            tx.objectStore("images").put({ id: Number(wrapper.dataset.id), data: newBase64 });
         }
+
+        // แสดง preview ของรูปหลังลบพื้นหลัง
+        img.addEventListener("click", () => {
+            previewImg.src = newBase64;
+            previewOverlay.style.display = "flex";
+        });
     });
+
     alert("ลบพื้นหลังเรียบร้อย!");
 });
+
 
 
 
