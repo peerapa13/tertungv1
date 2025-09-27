@@ -211,9 +211,22 @@ document.getElementById("downloadAll").addEventListener("click", () => {
     });
 });
 //======================เรียกใช้ฟังชั่นแก้ไขภาพ+++++++++++++++++++++
-document.getElementById("removebg").addEventListener("click", () => {
-    removeBackgroundFromAllImages();
-});
+function removeBackgroundFromAllImages() {
+    const wrappers = document.querySelectorAll(".image-wrapper");
+    wrappers.forEach(wrapper => {
+        const img = wrapper.querySelector("img");
+        const newBase64 = removeBackgroundFromImage(img);
+
+        // อัปเดต IndexedDB
+        const id = wrapper.dataset.id;
+        if(id && db) {
+            const tx = db.transaction("images", "readwrite");
+            const store = tx.objectStore("images");
+            store.put({ id: Number(id), data: newBase64 });
+        }
+    });
+}
+
 
 document.getElementById("Enhancingimages").addEventListener("click", () => {
     EnhancingimagesFromAllImages(); 
@@ -225,6 +238,7 @@ window.onload = function() {
         localStorage.setItem('popupShown', 'true');
     }
 };
+
 
 
 
