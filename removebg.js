@@ -19,6 +19,8 @@ function removeBackgroundFromAllImages(db, bgColor=[255,255,255], threshold=40){
 
         ctx.putImageData(imageData,0,0);
         const newBase64 = canvas.toDataURL("image/png");
+
+        // อัปเดต DOM ทันที
         img.src = newBase64;
 
         // อัปเดต IndexedDB

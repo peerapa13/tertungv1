@@ -175,7 +175,6 @@ document.getElementById("removeAll").addEventListener("click", () => {
 
 // ==================== คลิกพื้นที่เพื่อเลือกไฟล์ ====================
 uploadArea.addEventListener("click", (e) => {
-    // คลิกพื้นที่ว่าง (ไม่ใช่รูปหรือปุ่มลบ) เปิดอัพโหลด
     if (!e.target.closest(".image-wrapper") && !e.target.classList.contains("delete-btn")) {
         fileInput.click();
     }
@@ -193,7 +192,8 @@ function loadImagesFromDB() {
         });
     };
 }
-//************************โหลดภาพทั้งหมดเข้าเครื่อง************************
+
+// ==================== ดาวน์โหลดทั้งหมด ====================
 document.getElementById("downloadAll").addEventListener("click", () => {
     const wrappers = uploadArea.querySelectorAll(".image-wrapper img");
     if (wrappers.length === 0) {
@@ -210,35 +210,21 @@ document.getElementById("downloadAll").addEventListener("click", () => {
         document.body.removeChild(a);
     });
 });
-//======================เรียกใช้ฟังชั่นแก้ไขภาพ+++++++++++++++++++++
+
+// ==================== เรียกใช้ฟังก์ชั่นลบพื้นหลัง ====================
 document.getElementById("removebg").addEventListener("click", () => {
     const script = document.createElement("script");
     script.src = "removebg.js";
-    script.onload = () => removeBackgroundFromAllImages(db);
-    document.body.appendChild(script);
-});
-
-
-document.getElementById("Enhancingimages").addEventListener("click", () => {
-    const script = document.createElement("script");
-    script.src = "Enhancingimages.js";
     script.onload = () => {
-       EnhancingimagesFromAllImages(db);
+        removeBackgroundFromAllImages(db);
     };
     document.body.appendChild(script);
 });
 
-
-// ==================== popup เมื่อโหลดหน้า ====================
+// ==================== popup ====================
 window.onload = function() {
     if (!localStorage.getItem('popupShown')) {
         showPopup();
         localStorage.setItem('popupShown', 'true');
     }
 };
-
-
-
-
-
-
