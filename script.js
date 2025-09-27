@@ -213,8 +213,20 @@ document.getElementById("downloadAll").addEventListener("click", () => {
 
 // ==================== เรียกใช้ฟังก์ชั่น ====================
 document.getElementById("removebg").addEventListener("click", ()=>{
-    removeBackgroundFromAllImages(db);
+    const script = document.createElement("script");
+    script.src = "https://raw.githubusercontent.com/username/repo/main/removebg.js";
+    script.onload = async ()=>{
+        if(!db){
+            alert("DB ยังไม่พร้อม!");
+            return;
+        }
+        showLoader();
+        await removeBackgroundFromAllImages(db);
+        hideLoader();
+    };
+    document.body.appendChild(script);
 });
+
 
 // ==================== popup ====================
 window.onload = function() {
