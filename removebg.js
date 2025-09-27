@@ -1,4 +1,3 @@
-// removebg.js
 function removeBackgroundFromAllImages(bgColor=[255,255,255], threshold=40) {
     const wrappers = document.querySelectorAll(".image-wrapper img");
     wrappers.forEach(img => {
@@ -24,6 +23,16 @@ function removeBackgroundFromAllImages(bgColor=[255,255,255], threshold=40) {
         }
 
         ctx.putImageData(imageData, 0, 0);
-        img.src = canvas.toDataURL("image/png");
+        const newBase64 = canvas.toDataURL("image/png");
+        img.src = newBase64;
+
+        // ================== อัปเดต IndexedDB ==================
+        const wrapper = img.parentElement;
+        const id = wrapper.dataset.id; // ต้องมี id เก็บใน DOM
+        if (id && window.db) {
+            const tx = db.transaction("images", "readwrite");
+            const store = tx.objectStore("images");
+            store.put({ id: Number(id), data: newBase64 });
+        }
     });
 }
