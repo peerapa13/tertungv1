@@ -133,6 +133,7 @@ function addImageToDOM(base64, id=null) {
     delBtn.innerText = "x";
     delBtn.classList.add("delete-btn");
     delBtn.addEventListener("click", (e) => { 
+        e.stopPropagation(); 
         wrapper.remove();
         if(id) deleteImageFromDB(id);
         updateUploadText();
@@ -184,7 +185,7 @@ document.getElementById("removeAll").addEventListener("click", () => {
 });
 
 // ==================== คลิกพื้นที่เพื่อเลือกไฟล์ ====================
-uploadArea.addEventListener("click", () => {
+uploadArea.addEventListener("click", (e) => {
      if(e.target === uploadArea) {
         fileInput.click();
     }
@@ -210,5 +211,6 @@ window.onload = function() {
         localStorage.setItem('popupShown', 'true');
     }
 };
+
 
 
