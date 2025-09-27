@@ -70,49 +70,29 @@ function updateUploadText() {
 }
 
 // ==================== อัพโหลด + แสดงภาพ ====================
-fileInput.addEventListener("change", (e) => {
-    const files = e.target.files;
-    if (!files) return;
-
-    Array.from(files).forEach(file => {
+fileInput.addEventListener("change", e => {
+    Array.from(e.target.files).forEach(file => {
         const reader = new FileReader();
-        reader.onload = function(event) {
+        reader.onload = event => {
+
             const wrapper = document.createElement("div");
-            wrapper.className = "image-wrapper";
-            wrapper.style.display = "inline-block";
-            wrapper.style.position = "relative";
-            wrapper.style.margin = "5px";
+            wrapper.classList.add("image-wrapper");
 
             const img = document.createElement("img");
             img.src = event.target.result;
-            img.style.maxWidth = "200px";
-            img.style.border = "1px solid #ccc";
             wrapper.appendChild(img);
 
             const delBtn = document.createElement("button");
-            delBtn.innerText = "×";
-            delBtn.style.position = "absolute";
-            delBtn.style.top = "2px";
-            delBtn.style.right = "2px";
-            delBtn.style.background = "red";
-            delBtn.style.color = "white";
-            delBtn.style.border = "none";
-            delBtn.style.cursor = "pointer";
-
-            delBtn.addEventListener("click", () => {
-                wrapper.remove();
-                updateUploadText();
-            });
-
+            delBtn.innerText = "x";
+            delBtn.classList.add("delete-btn");
+            delBtn.addEventListener("click", () => wrapper.remove());
             wrapper.appendChild(delBtn);
-            uploadArea.appendChild(wrapper);
 
-            updateUploadText();
-        }
+            uploadArea.appendChild(wrapper);
+        };
         reader.readAsDataURL(file);
     });
 });
-
 // ==================== ลบทั้งหมด ====================
 document.getElementById("removeAll").addEventListener("click", () => {
     const wrappers = uploadArea.querySelectorAll(".image-wrapper");
@@ -133,6 +113,7 @@ window.onload = function() {
         localStorage.setItem('popupShown', 'true');
     }
 };
+
 
 
 
