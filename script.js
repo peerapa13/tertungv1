@@ -122,7 +122,8 @@ function addImageToDOM(base64, id=null) {
     img.src = base64;
 
     // คลิกรูปเพื่อเปิด preview
-    img.addEventListener("click", () => {
+    img.addEventListener("click", (e) => {
+        e.stopPropagation(); 
         previewImg.src = base64;
         previewOverlay.style.display = "flex";
     });
@@ -186,10 +187,11 @@ document.getElementById("removeAll").addEventListener("click", () => {
 
 // ==================== คลิกพื้นที่เพื่อเลือกไฟล์ ====================
 uploadArea.addEventListener("click", (e) => {
-     if(e.target === uploadArea) {
+    if (!e.target.closest(".image-wrapper") && !e.target.classList.contains("delete-btn")) {
         fileInput.click();
     }
 });
+
 
 // ==================== โหลดภาพจาก IndexedDB ====================
 function loadImagesFromDB() {
@@ -211,6 +213,7 @@ window.onload = function() {
         localStorage.setItem('popupShown', 'true');
     }
 };
+
 
 
 
