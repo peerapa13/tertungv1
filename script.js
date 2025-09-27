@@ -214,16 +214,17 @@ document.getElementById("removebg").addEventListener("click", () => {
     const script = document.createElement("script");
     script.src = "removebg.js";
     script.onload = () => {
-        myFunction(); // เรียกใช้หลังไฟล์โหลดเสร็จ
+        removeBackgroundFromAllImages(); 
     };
     document.body.appendChild(script);
 });
+
 
 document.getElementById("Enhancingimages").addEventListener("click", () => {
     const script = document.createElement("script");
     script.src = "Enhancingimages.js";
     script.onload = () => {
-        myFunction(); // เรียกใช้หลังไฟล์โหลดเสร็จ
+        EnhancingimagesFromAllImages(); 
     };
     document.body.appendChild(script);
 });
@@ -235,4 +236,5 @@ window.onload = function() {
         localStorage.setItem('popupShown', 'true');
     }
 };
+
 
