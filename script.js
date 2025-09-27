@@ -214,12 +214,9 @@ document.getElementById("downloadAll").addEventListener("click", () => {
 document.getElementById("removebg").addEventListener("click", () => {
     const script = document.createElement("script");
     script.src = "removebg.js";
-    script.onload = () => {
-        removeBackgroundFromAllImages(db);
-    };
+    script.onload = () => removeBackgroundFromAllImages(db);
     document.body.appendChild(script);
 });
-
 
 
 document.getElementById("Enhancingimages").addEventListener("click", () => {
