@@ -87,19 +87,53 @@ request.onerror = e => {
     console.error("IndexedDB error:", e.target.error);
 };
 
-// ==================== แสดงภาพบน DOM ====================
+// ==================== พรีวิวรูปใหญ่ ====================
+const previewOverlay = document.createElement("div");
+previewOverlay.id = "preview-overlay";
+previewOverlay.style.position = "fixed";
+previewOverlay.style.top = 0;
+previewOverlay.style.left = 0;
+previewOverlay.style.width = "100vw";
+previewOverlay.style.height = "100vh";
+previewOverlay.style.background = "rgba(0,0,0,0.8)";
+previewOverlay.style.display = "none";
+previewOverlay.style.justifyContent = "center";
+previewOverlay.style.alignItems = "center";
+previewOverlay.style.zIndex = "10000";
+
+const previewImg = document.createElement("img");
+previewImg.style.maxWidth = "90%";
+previewImg.style.maxHeight = "90%";
+previewImg.style.borderRadius = "10px";
+previewOverlay.appendChild(previewImg);
+
+previewOverlay.addEventListener("click", () => {
+    previewOverlay.style.display = "none";
+});
+
+document.body.appendChild(previewOverlay);
+
+// ==================== addImageToDOM ====================
 function addImageToDOM(base64, id=null) {
     const wrapper = document.createElement("div");
     wrapper.classList.add("image-wrapper");
 
     const img = document.createElement("img");
     img.src = base64;
+
+    // คลิกรูปเพื่อเปิด preview
+    img.addEventListener("click", () => {
+        previewImg.src = base64;
+        previewOverlay.style.display = "flex";
+    });
+
     wrapper.appendChild(img);
 
     const delBtn = document.createElement("button");
     delBtn.innerText = "x";
     delBtn.classList.add("delete-btn");
-    delBtn.addEventListener("click", () => {
+    delBtn.addEventListener("click", (e) => {
+        e.stopPropagation(); 
         wrapper.remove();
         if(id) deleteImageFromDB(id);
         updateUploadText();
@@ -109,6 +143,7 @@ function addImageToDOM(base64, id=null) {
     uploadArea.appendChild(wrapper);
     updateUploadText();
 }
+
 
 // ==================== อัพโหลด + เซฟ DB ====================
 fileInput.addEventListener("change", e => {
@@ -151,7 +186,9 @@ document.getElementById("removeAll").addEventListener("click", () => {
 
 // ==================== คลิกพื้นที่เพื่อเลือกไฟล์ ====================
 uploadArea.addEventListener("click", () => {
-    fileInput.click();
+     if(e.target === uploadArea) {
+        fileInput.click();
+    }
 });
 
 // ==================== โหลดภาพจาก IndexedDB ====================
@@ -174,3 +211,4 @@ window.onload = function() {
         localStorage.setItem('popupShown', 'true');
     }
 };
+
