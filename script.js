@@ -87,25 +87,6 @@ request.onerror = e => {
     console.error("IndexedDB error:", e.target.error);
 };
 
-// ==================== อัพโหลด + แสดงภาพ ====================
-fileInput.addEventListener("change", e => {
-    Array.from(e.target.files).forEach(file => {
-        const reader = new FileReader();
-        reader.onload = event => {
-            const base64 = event.target.result;
-
-            // แสดงภาพบนหน้า
-            addImageToDOM(base64);
-
-            // เซฟลง IndexedDB
-            const tx = db.transaction("images", "readwrite");
-            const store = tx.objectStore("images");
-            store.add({ data: base64 });
-        };
-        reader.readAsDataURL(file);
-    });
-});
-
 // ==================== แสดงภาพบน DOM ====================
 function addImageToDOM(base64, id=null) {
     const wrapper = document.createElement("div");
@@ -127,6 +108,34 @@ function addImageToDOM(base64, id=null) {
 
     uploadArea.appendChild(wrapper);
     updateUploadText();
+}
+
+// ==================== อัพโหลด + เซฟ DB ====================
+fileInput.addEventListener("change", e => {
+    Array.from(e.target.files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = event => {
+            const base64 = event.target.result;
+
+            // เซฟลง IndexedDB
+            const tx = db.transaction("images", "readwrite");
+            const store = tx.objectStore("images");
+            const requestAdd = store.add({ data: base64 });
+
+            requestAdd.onsuccess = e => {
+                const id = e.target.result; // id ของภาพใน DB
+                addImageToDOM(base64, id);
+            };
+        };
+        reader.readAsDataURL(file);
+    });
+});
+
+// ==================== ลบภาพจาก IndexedDB ====================
+function deleteImageFromDB(id) {
+    const tx = db.transaction("images", "readwrite");
+    const store = tx.objectStore("images");
+    store.delete(id);
 }
 
 // ==================== ลบทั้งหมด ====================
@@ -158,16 +167,8 @@ function loadImagesFromDB() {
     };
 }
 
-// ==================== ลบภาพจาก IndexedDB ====================
-function deleteImageFromDB(id) {
-    const tx = db.transaction("images", "readwrite");
-    const store = tx.objectStore("images");
-    store.delete(id);
-}
-
 // ==================== popup เมื่อโหลดหน้า ====================
 window.onload = function() {
-    loadImagesFromDB()
     if (!localStorage.getItem('popupShown')) {
         showPopup();
         localStorage.setItem('popupShown', 'true');
