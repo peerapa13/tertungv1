@@ -3,7 +3,7 @@
 ![Logo](https://peerapa13.github.io/tertungv1/img/DALL%C2%B7E%202025-01-21%2020.19.36%20-%20A%20minimalist%20and%20elegant%20logo%20design%20for%20the%20name%20'TERTUNG',%20incorporating%20unique%20shapes%20.webp)
 
 > “โปรเจค TertungV1 เป็นส่วนหนึ่งของโครงงานของชั้นมัธยมตอนปลาย เป็นส่วนหนึ่งโครงงานโครงงานเพื่อการศึกษา”  
-
+ขณะนี้กำลังระหว่างการพัฒนา
 TertungV1 เป็นเว็บแก้ไขภาพ AI ที่ช่วยแก้ไขภาพในคลิกเดียว
 
 ## 🔥 **จุดเด่นของ TertungV1**
