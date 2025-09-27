@@ -69,35 +69,75 @@ function updateUploadText() {
     uploadText.style.display = hasImages ? "none" : "block";
 }
 
+// ==================== IndexedDB ====================
+let db;
+const request = indexedDB.open("myImagesDB", 1);
+
+request.onupgradeneeded = e => {
+    db = e.target.result;
+    db.createObjectStore("images", { keyPath: "id", autoIncrement: true });
+};
+
+request.onsuccess = e => {
+    db = e.target.result;
+    loadImagesFromDB();
+};
+
+request.onerror = e => {
+    console.error("IndexedDB error:", e.target.error);
+};
+
 // ==================== อัพโหลด + แสดงภาพ ====================
 fileInput.addEventListener("change", e => {
     Array.from(e.target.files).forEach(file => {
         const reader = new FileReader();
         reader.onload = event => {
+            const base64 = event.target.result;
 
-            const wrapper = document.createElement("div");
-            wrapper.classList.add("image-wrapper");
+            // แสดงภาพบนหน้า
+            addImageToDOM(base64);
 
-            const img = document.createElement("img");
-            img.src = event.target.result;
-            wrapper.appendChild(img);
-
-            const delBtn = document.createElement("button");
-            delBtn.innerText = "x";
-            delBtn.classList.add("delete-btn");
-            delBtn.addEventListener("click", () => wrapper.remove());
-            wrapper.appendChild(delBtn);
-
-            uploadArea.appendChild(wrapper);
+            // เซฟลง IndexedDB
+            const tx = db.transaction("images", "readwrite");
+            const store = tx.objectStore("images");
+            store.add({ data: base64 });
         };
         reader.readAsDataURL(file);
     });
 });
+
+// ==================== แสดงภาพบน DOM ====================
+function addImageToDOM(base64, id=null) {
+    const wrapper = document.createElement("div");
+    wrapper.classList.add("image-wrapper");
+
+    const img = document.createElement("img");
+    img.src = base64;
+    wrapper.appendChild(img);
+
+    const delBtn = document.createElement("button");
+    delBtn.innerText = "x";
+    delBtn.classList.add("delete-btn");
+    delBtn.addEventListener("click", () => {
+        wrapper.remove();
+        if(id) deleteImageFromDB(id);
+        updateUploadText();
+    });
+    wrapper.appendChild(delBtn);
+
+    uploadArea.appendChild(wrapper);
+    updateUploadText();
+}
+
 // ==================== ลบทั้งหมด ====================
 document.getElementById("removeAll").addEventListener("click", () => {
     const wrappers = uploadArea.querySelectorAll(".image-wrapper");
     wrappers.forEach(w => w.remove());
     updateUploadText();
+
+    const tx = db.transaction("images", "readwrite");
+    const store = tx.objectStore("images");
+    store.clear();
 });
 
 // ==================== คลิกพื้นที่เพื่อเลือกไฟล์ ====================
@@ -105,15 +145,31 @@ uploadArea.addEventListener("click", () => {
     fileInput.click();
 });
 
+// ==================== โหลดภาพจาก IndexedDB ====================
+function loadImagesFromDB() {
+    const tx = db.transaction("images", "readonly");
+    const store = tx.objectStore("images");
+    const request = store.getAll();
 
-// ฟังก์ชันสำหรับแสดง popup ตอนโหลดหน้า
+    request.onsuccess = () => {
+        request.result.forEach(item => {
+            addImageToDOM(item.data, item.id);
+        });
+    };
+}
+
+// ==================== ลบภาพจาก IndexedDB ====================
+function deleteImageFromDB(id) {
+    const tx = db.transaction("images", "readwrite");
+    const store = tx.objectStore("images");
+    store.delete(id);
+}
+
+// ==================== popup เมื่อโหลดหน้า ====================
 window.onload = function() {
+    loadImagesFromDB()
     if (!localStorage.getItem('popupShown')) {
-        document.getElementById('popupOverlay');
+        showPopup();
         localStorage.setItem('popupShown', 'true');
     }
 };
-
-
-
-
