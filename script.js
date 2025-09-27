@@ -192,7 +192,41 @@ function loadImagesFromDB() {
         });
     };
 }
+//************************โหลดภาพทั้งหมดเข้าเครื่อง************************
+document.getElementById("downloadAll").addEventListener("click", () => {
+    const wrappers = uploadArea.querySelectorAll(".image-wrapper img");
+    if (wrappers.length === 0) {
+        alert("ไม่มีรูปภาพให้ดาวน์โหลด");
+        return;
+    }
 
+    wrappers.forEach((img, index) => {
+        const a = document.createElement("a");
+        a.href = img.src;
+        a.download = `image_${index + 1}.png`; 
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    });
+});
+//======================เรียกใช้ฟังชั่นแก้ไขภาพ+++++++++++++++++++++
+document.getElementById("removebg").addEventListener("click", () => {
+    const script = document.createElement("script");
+    script.src = "removebg.js";
+    script.onload = () => {
+        myFunction(); // เรียกใช้หลังไฟล์โหลดเสร็จ
+    };
+    document.body.appendChild(script);
+});
+
+document.getElementById("Enhancingimages").addEventListener("click", () => {
+    const script = document.createElement("script");
+    script.src = "Enhancingimages.js";
+    script.onload = () => {
+        myFunction(); // เรียกใช้หลังไฟล์โหลดเสร็จ
+    };
+    document.body.appendChild(script);
+});
 // ==================== popup เมื่อโหลดหน้า ====================
 window.onload = function() {
     loadImagesFromDB()
@@ -201,3 +235,4 @@ window.onload = function() {
         localStorage.setItem('popupShown', 'true');
     }
 };
+
