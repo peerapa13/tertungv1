@@ -107,6 +107,7 @@ document.body.appendChild(previewOverlay);
 function addImageToDOM(base64, id=null) {
     const wrapper = document.createElement("div");
     wrapper.classList.add("image-wrapper");
+    if(id) wrapper.dataset.id = id;
 
     const img = document.createElement("img");
     img.src = base64;
@@ -219,12 +220,12 @@ document.getElementById("Enhancingimages").addEventListener("click", () => {
 });
 // ==================== popup เมื่อโหลดหน้า ====================
 window.onload = function() {
-    loadImagesFromDB()
     if (!localStorage.getItem('popupShown')) {
         showPopup();
         localStorage.setItem('popupShown', 'true');
     }
 };
+
 
 
 
