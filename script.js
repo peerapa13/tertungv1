@@ -211,26 +211,27 @@ document.getElementById("downloadAll").addEventListener("click", () => {
     });
 });
 //======================เรียกใช้ฟังชั่นแก้ไขภาพ+++++++++++++++++++++
-function removeBackgroundFromAllImages() {
-    const wrappers = document.querySelectorAll(".image-wrapper");
-    wrappers.forEach(wrapper => {
-        const img = wrapper.querySelector("img");
-        const newBase64 = removeBackgroundFromImage(img);
+document.getElementById("removebg").addEventListener("click", () => {
+    const script = document.createElement("script");
+    script.src = "removebg.js";
+    script.onload = () => {
+        removeBackgroundFromAllImages(db);
+    };
+    document.body.appendChild(script);
+});
 
-        // อัปเดต IndexedDB
-        const id = wrapper.dataset.id;
-        if(id && db) {
-            const tx = db.transaction("images", "readwrite");
-            const store = tx.objectStore("images");
-            store.put({ id: Number(id), data: newBase64 });
-        }
-    });
-}
 
 
 document.getElementById("Enhancingimages").addEventListener("click", () => {
-    EnhancingimagesFromAllImages(); 
+    const script = document.createElement("script");
+    script.src = "Enhancingimages.js";
+    script.onload = () => {
+       EnhancingimagesFromAllImages(db);
+    };
+    document.body.appendChild(script);
 });
+
+
 // ==================== popup เมื่อโหลดหน้า ====================
 window.onload = function() {
     if (!localStorage.getItem('popupShown')) {
@@ -238,6 +239,7 @@ window.onload = function() {
         localStorage.setItem('popupShown', 'true');
     }
 };
+
 
 
 
