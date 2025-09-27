@@ -187,9 +187,6 @@ document.getElementById("removeAll").addEventListener("click", () => {
 
 // ฟังก์ชันสำหรับแสดง popup ตอนโหลดหน้า
 window.onload = function() {
-    showLoader();
-    loadImagesFromLocalStorage();
-    hideLoader();
     // ตรวจสอบว่า popup แสดงไปแล้วหรือยัง
     if (!localStorage.getItem('popupShown')) {
         // ถ้ายังไม่แสดง popup, แสดง popup
@@ -198,6 +195,7 @@ window.onload = function() {
         localStorage.setItem('popupShown', 'true');
     }
 };
+
 
 
 
