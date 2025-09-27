@@ -274,7 +274,7 @@ document.getElementById("removebg").addEventListener("click", () => {
         });
     });
 
-    alert("ลบพื้นหลังเรียบร้อย!");
+    alert("ลบพื้นหลัง");
 });
 
 
