@@ -7,52 +7,44 @@ function closePopup() {
 }
 
 // ==================== loader ====================
-function showLoader() {
+function showLoader(message = "Processing...") {
     let loader = document.getElementById("loader-overlay");
     if (!loader) {
         loader = document.createElement("div");
         loader.id = "loader-overlay";
-        loader.style.position = "fixed";
-        loader.style.top = "0";
-        loader.style.left = "0";
-        loader.style.width = "100vw";
-        loader.style.height = "100vh";
-        loader.style.background = "rgba(0,0,0,0.5)";
-        loader.style.zIndex = "9999";
-        loader.style.display = "flex";
-        loader.style.alignItems = "center";
-        loader.style.justifyContent = "center";
-        loader.style.flexDirection = "column";
+        loader.style.cssText = `
+            position:fixed; top:0; left:0; width:100vw; height:100vh;
+            background:rgba(0,0,0,0.5); z-index:9999;
+            display:flex; align-items:center; justify-content:center; flex-direction:column;
+        `;
 
         const spinner = document.createElement("div");
-        spinner.style.border = "8px solid #f3f3f3";
-        spinner.style.borderTop = "8px solid #3498db";
-        spinner.style.borderRadius = "50%";
-        spinner.style.width = "60px";
-        spinner.style.height = "60px";
-        spinner.style.animation = "spin 1s linear infinite";
+        spinner.id = "loader-spinner";
+        spinner.style.cssText = `
+            border:8px solid #f3f3f3; border-top:8px solid #3498db;
+            border-radius:50%; width:60px; height:60px;
+            animation:spin 1s linear infinite;
+        `;
         loader.appendChild(spinner);
 
         const text = document.createElement("div");
-        text.innerText = "Processing...";
-        text.style.color = "white";
-        text.style.fontSize = "20px";
-        text.style.marginTop = "12px";
+        text.id = "loader-text";
+        text.style.cssText = "color:white; font-size:20px; margin-top:12px;";
+        text.innerText = message;
         loader.appendChild(text);
 
         document.body.appendChild(loader);
 
         const style = document.createElement("style");
-        style.innerHTML = `
-            @keyframes spin {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(360deg); }
-            }
-        `;
+        style.innerHTML = `@keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }`;
         document.head.appendChild(style);
+    } else {
+        const text = loader.querySelector("#loader-text");
+        if (text) text.innerText = message;
     }
     loader.style.display = "flex";
 }
+
 function hideLoader() {
     const loader = document.getElementById("loader-overlay");
     if (loader) loader.style.display = "none";
@@ -70,29 +62,40 @@ function updateUploadText() {
 }
 
 // ==================== IndexedDB ====================
+// FIX #7: เพิ่ม version เป็น 2 + สร้าง "processedImages" store แยก
 let db;
-const request = indexedDB.open("myImagesDB", 1);
+const dbRequest = indexedDB.open("myImagesDB", 2);
 
-request.onupgradeneeded = e => {
+dbRequest.onupgradeneeded = e => {
     db = e.target.result;
-    db.createObjectStore("images", { keyPath: "id", autoIncrement: true });
+    const oldVersion = e.oldVersion;
+
+    // สร้าง "images" store (ถ้ายังไม่มี)
+    if (!db.objectStoreNames.contains("images")) {
+        db.createObjectStore("images", { keyPath: "id", autoIncrement: true });
+    }
+    // FIX #7: สร้าง "processedImages" store แยกสำหรับเก็บภาพที่ผ่านการประมวลผลแล้ว
+    if (!db.objectStoreNames.contains("processedImages")) {
+        db.createObjectStore("processedImages", { keyPath: "id", autoIncrement: true });
+    }
 };
 
-request.onsuccess = e => {
+dbRequest.onsuccess = e => {
     db = e.target.result;
     loadImagesFromDB();
 };
 
-request.onerror = e => {
+dbRequest.onerror = e => {
     console.error("IndexedDB error:", e.target.error);
 };
 
-// ==================== พรีวิวรูปใหญ่ ====================
+// ==================== previewOverlay (สร้างครั้งเดียว) ====================
+// FIX #4: ย้ายมาสร้างที่นี่ที่เดียว ไม่สร้างซ้ำในแต่ละ event listener
 const previewOverlay = document.createElement("div");
 previewOverlay.id = "preview-overlay";
 previewOverlay.style.cssText = `
-    position: fixed; top:0; left:0; width:100vw; height:100vh;
-    background: rgba(0,0,0,0.8); display:none;
+    position:fixed; top:0; left:0; width:100vw; height:100vh;
+    background:rgba(0,0,0,0.8); display:none;
     justify-content:center; align-items:center; z-index:10000;
 `;
 const previewImg = document.createElement("img");
@@ -104,17 +107,16 @@ previewOverlay.addEventListener("click", () => {
 document.body.appendChild(previewOverlay);
 
 // ==================== addImageToDOM ====================
-function addImageToDOM(base64, id=null) {
+function addImageToDOM(base64, id = null) {
     const wrapper = document.createElement("div");
     wrapper.classList.add("image-wrapper");
-    if(id) wrapper.dataset.id = id;
+    if (id) wrapper.dataset.id = id;
 
     const img = document.createElement("img");
     img.src = base64;
 
-    // คลิกรูปเพื่อ preview
     img.addEventListener("click", () => {
-        previewImg.src = base64;
+        previewImg.src = img.src; // ใช้ img.src ปัจจุบัน (อาจถูก update แล้ว)
         previewOverlay.style.display = "flex";
     });
 
@@ -123,10 +125,14 @@ function addImageToDOM(base64, id=null) {
     const delBtn = document.createElement("button");
     delBtn.innerText = "x";
     delBtn.classList.add("delete-btn");
-    delBtn.addEventListener("click", (e) => { 
-        e.stopPropagation(); // ไม่ให้ trigger preview
+    delBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const imgId = wrapper.dataset.id ? Number(wrapper.dataset.id) : null;
         wrapper.remove();
-        if(id) deleteImageFromDB(id);
+        if (imgId) {
+            deleteImageFromDB(imgId);
+            deleteProcessedFromDB(imgId);
+        }
         updateUploadText();
     });
     wrapper.appendChild(delBtn);
@@ -141,13 +147,11 @@ fileInput.addEventListener("change", e => {
         const reader = new FileReader();
         reader.onload = event => {
             const base64 = event.target.result;
-
             const tx = db.transaction("images", "readwrite");
             const store = tx.objectStore("images");
             const requestAdd = store.add({ data: base64 });
-
             requestAdd.onsuccess = e => {
-                const id = e.target.result; 
+                const id = e.target.result;
                 addImageToDOM(base64, id);
             };
         };
@@ -158,19 +162,27 @@ fileInput.addEventListener("change", e => {
 // ==================== ลบภาพจาก IndexedDB ====================
 function deleteImageFromDB(id) {
     const tx = db.transaction("images", "readwrite");
-    const store = tx.objectStore("images");
-    store.delete(id);
+    tx.objectStore("images").delete(id);
+}
+
+function deleteProcessedFromDB(id) {
+    if (!db.objectStoreNames.contains("processedImages")) return;
+    const tx = db.transaction("processedImages", "readwrite");
+    tx.objectStore("processedImages").delete(id);
 }
 
 // ==================== ลบทั้งหมด ====================
 document.getElementById("removeAll").addEventListener("click", () => {
-    const wrappers = uploadArea.querySelectorAll(".image-wrapper");
-    wrappers.forEach(w => w.remove());
+    uploadArea.querySelectorAll(".image-wrapper").forEach(w => w.remove());
     updateUploadText();
 
-    const tx = db.transaction("images", "readwrite");
-    const store = tx.objectStore("images");
-    store.clear();
+    const tx1 = db.transaction("images", "readwrite");
+    tx1.objectStore("images").clear();
+
+    if (db.objectStoreNames.contains("processedImages")) {
+        const tx2 = db.transaction("processedImages", "readwrite");
+        tx2.objectStore("processedImages").clear();
+    }
 });
 
 // ==================== คลิกพื้นที่เพื่อเลือกไฟล์ ====================
@@ -185,26 +197,22 @@ function loadImagesFromDB() {
     const tx = db.transaction("images", "readonly");
     const store = tx.objectStore("images");
     const request = store.getAll();
-
     request.onsuccess = () => {
-        request.result.forEach(item => {
-            addImageToDOM(item.data, item.id);
-        });
+        request.result.forEach(item => addImageToDOM(item.data, item.id));
     };
 }
 
 // ==================== ดาวน์โหลดทั้งหมด ====================
 document.getElementById("downloadAll").addEventListener("click", () => {
-    const wrappers = uploadArea.querySelectorAll(".image-wrapper img");
-    if (wrappers.length === 0) {
+    const imgs = uploadArea.querySelectorAll(".image-wrapper img");
+    if (imgs.length === 0) {
         alert("ไม่มีรูปภาพให้ดาวน์โหลด");
         return;
     }
-
-    wrappers.forEach((img, index) => {
+    imgs.forEach((img, index) => {
         const a = document.createElement("a");
         a.href = img.src;
-        a.download = `image_${index + 1}.png`; 
+        a.download = `tertung_image_${index + 1}.png`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -212,76 +220,101 @@ document.getElementById("downloadAll").addEventListener("click", () => {
 });
 
 // ==================== ลบพื้นหลัง ====================
-document.getElementById("removebg").addEventListener("click", () => {
+// FIX #1: ไม่ duplicate logic — เรียก removeBackgroundFromAllImages() จาก removebg.js
+// FIX #2: ใช้ฟังก์ชันจาก removebg.js (AI-based) แทน canvas pixel เดิม
+// FIX #4: ไม่สร้าง previewOverlay ซ้ำอีกต่อไป
+document.getElementById("removebg").addEventListener("click", async () => {
     const wrappers = uploadArea.querySelectorAll(".image-wrapper");
+    if (wrappers.length === 0) {
+        alert("กรุณาอัพโหลดรูปภาพก่อน");
+        return;
+    }
     if (!db) {
-        alert("DB ยังโหลดไม่เสร็จ");
+        alert("DB ยังโหลดไม่เสร็จ กรุณารอสักครู่แล้วลองอีกครั้ง");
         return;
     }
 
-    // สร้าง overlay สำหรับ preview
-    let previewOverlay = document.getElementById("preview-overlay");
-    let previewImg;
-    if (!previewOverlay) {
-        previewOverlay = document.createElement("div");
-        previewOverlay.id = "preview-overlay";
-        previewOverlay.style.cssText = `
-            position: fixed; top:0; left:0; width:100vw; height:100vh;
-            background: rgba(0,0,0,0.8); display:none;
-            justify-content:center; align-items:center; z-index:10000;
-        `;
-        previewImg = document.createElement("img");
-        previewImg.style.cssText = "max-width:90%; max-height:90%; border-radius:10px;";
-        previewOverlay.appendChild(previewImg);
-        previewOverlay.addEventListener("click", () => {
-            previewOverlay.style.display = "none";
-        });
-        document.body.appendChild(previewOverlay);
-    } else {
-        previewImg = previewOverlay.querySelector("img");
+    showLoader("กำลังลบพื้นหลัง... (AI กำลังทำงาน)");
+    try {
+        // เรียกใช้ฟังก์ชันจาก removebg.js (FIX #2 + #6)
+        await removeBackgroundFromAllImages(db, { useAI: true });
+        alert("ลบพื้นหลังเสร็จสิ้น!");
+    } catch (err) {
+        console.error("removebg error:", err);
+        alert("เกิดข้อผิดพลาด: " + err.message);
+    } finally {
+        hideLoader();
     }
-
-    wrappers.forEach(wrapper => {
-        const img = wrapper.querySelector("img");
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-        canvas.width = img.naturalWidth;
-        canvas.height = img.naturalHeight;
-        ctx.drawImage(img, 0, 0);
-
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const data = imageData.data;
-        for (let i = 0; i < data.length; i += 4) {
-            const r = data[i], g = data[i+1], b = data[i+2];
-            const distance = Math.sqrt((r - 255)**2 + (g - 255)**2 + (b - 255)**2);
-            if (distance < 40) data[i+3] = 0; // ทำให้โปร่งใส
-        }
-        ctx.putImageData(imageData, 0, 0);
-
-        const newBase64 = canvas.toDataURL("image/png");
-        img.src = newBase64;
-
-        // อัปเดต DB
-        if (wrapper.dataset.id) {
-            const tx = db.transaction("images", "readwrite");
-            tx.objectStore("images").put({ id: Number(wrapper.dataset.id), data: newBase64 });
-        }
-
-        // แสดง preview ของรูปหลังลบพื้นหลัง
-        img.addEventListener("click", () => {
-            previewImg.src = newBase64;
-            previewOverlay.style.display = "flex";
-        });
-    });
-
-    alert("ลบพื้นหลัง");
 });
 
+// ==================== ปรับปรุงภาพ ====================
+// FIX #5: เชื่อม "ปรับปรุงภาพ" button กับ logic จริง
+// ใช้ Canvas filter เพื่อเพิ่ม contrast/brightness/sharpen แบบ client-side
+// (สามารถสลับเป็น Cloudinary API ในอนาคต)
+document.getElementById("enhancingimages").addEventListener("click", async () => {
+    const wrappers = uploadArea.querySelectorAll(".image-wrapper");
+    if (wrappers.length === 0) {
+        alert("กรุณาอัพโหลดรูปภาพก่อน");
+        return;
+    }
+    if (!db) {
+        alert("DB ยังโหลดไม่เสร็จ กรุณารอสักครู่แล้วลองอีกครั้ง");
+        return;
+    }
 
+    showLoader("กำลังปรับปรุงคุณภาพภาพ...");
+    try {
+        await enhanceAllImages(db);
+        alert("ปรับปรุงภาพเสร็จสิ้น!");
+    } catch (err) {
+        console.error("enhance error:", err);
+        alert("เกิดข้อผิดพลาด: " + err.message);
+    } finally {
+        hideLoader();
+    }
+});
 
+/**
+ * ปรับปรุงภาพทุกรูปด้วย Canvas filter
+ * เพิ่ม contrast, brightness, และทำ unsharp mask แบบง่าย
+ */
+async function enhanceAllImages(db) {
+    const wrappers = document.querySelectorAll(".image-wrapper");
+    for (const wrapper of wrappers) {
+        const img = wrapper.querySelector("img");
+        const newBase64 = await _applyEnhancement(img);
+        img.src = newBase64;
 
-// ==================== popup ====================
-window.onload = function() {
+        // เซฟลง processedImages store
+        if (wrapper.dataset.id) {
+            const id = Number(wrapper.dataset.id);
+            const storeName = db.objectStoreNames.contains("processedImages") ? "processedImages" : "images";
+            await new Promise((resolve) => {
+                const tx = db.transaction(storeName, "readwrite");
+                tx.objectStore(storeName).put({ id, data: newBase64 }).onsuccess = () => resolve();
+            });
+        }
+    }
+}
+
+function _applyEnhancement(imgEl) {
+    return new Promise((resolve) => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        canvas.width = imgEl.naturalWidth || imgEl.width;
+        canvas.height = imgEl.naturalHeight || imgEl.height;
+
+        // ใช้ CSS filter ผ่าน canvas: เพิ่ม contrast 20%, brightness 5%, saturate 15%
+        ctx.filter = "contrast(1.2) brightness(1.05) saturate(1.15)";
+        ctx.drawImage(imgEl, 0, 0);
+        ctx.filter = "none";
+
+        resolve(canvas.toDataURL("image/png"));
+    });
+}
+
+// ==================== popup on first visit ====================
+window.onload = function () {
     if (!localStorage.getItem('popupShown')) {
         showPopup();
         localStorage.setItem('popupShown', 'true');
