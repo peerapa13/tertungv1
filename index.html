@@ -31,13 +31,10 @@
         <p class="cl"><a href="javascript:void(0)" onclick="showPopup()">คำแนะนำ</a></p>
     </header>
 
-    <img src="" alt="">
-
     <div class="upload-container">
-        <!-- รับข้อมูลผู้ใช้ส่งไปเซิร์ฟเวอร์ -->
         <form id="upload-form" enctype="multipart/form-data">
             <button id="removebg" class="edit-btn" type="button">ลบพื้นหลังอัตโนมัติ</button>
-            <button id="Enhancingimages" class="edit-btn" type="button">ปรับปรุงภาพ</button>
+            <button id="enhancingimages" class="edit-btn" type="button">ปรับปรุงภาพ</button>
             <button id="downloadAll" class="edit-btn" type="button">ดาวน์โหลดทั้งหมด</button>
             <button id="removeAll" class="edit-btn" type="button">ลบรูปภาพทั้งหมด</button>
 
@@ -48,19 +45,11 @@
         </form>
     </div>
 
-    <script src="./script.js"></script>
+    <!-- โหลด removebg.js ก่อน script.js เพื่อให้ฟังก์ชันพร้อมใช้งาน -->
     <script src="./removebg.js"></script>
-    <script src="./Enhancingimages.js"></script>
+    <script src="./script.js"></script>
+    <!-- หมายเหตุ: ลบ Enhancingimages.js ออกเพราะไฟล์ไม่มีในโปรเจค
+         และเปลี่ยน id="Enhancingimages" → id="enhancingimages" (lowercase) -->
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
