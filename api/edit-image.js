@@ -46,6 +46,15 @@ export default async function handler(request, response) {
         });
         const data = await geminiResponse.json();
         if (!geminiResponse.ok) {
+            if (geminiResponse.status === 429) {
+                const retrySeconds = Number(data.error?.details?.find(
+                    detail => detail.retryDelay
+                )?.retryDelay?.replace("s", "")) || 30;
+                response.setHeader("Retry-After", String(retrySeconds));
+                return response.status(429).json({
+                    error: `โควตา Gemini เต็มหรือยังไม่เปิดใช้สำหรับการสร้างภาพ กรุณาลองใหม่ใน ${retrySeconds} วินาที หรือเปิด billing/free quota ใน Google AI Studio`
+                });
+            }
             return response.status(geminiResponse.status).json({
                 error: data.error?.message || "Gemini แก้ภาพไม่สำเร็จ"
             });

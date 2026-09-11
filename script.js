@@ -566,7 +566,11 @@ async function applyPromptToCanvas(prompt) {
         })
     });
     const result = await response.json();
-    if (!response.ok) throw new Error(result.error || "AI แก้ภาพไม่สำเร็จ");
+    if (!response.ok) {
+        const error = new Error(result.error || "AI แก้ภาพไม่สำเร็จ");
+        error.status = response.status;
+        throw error;
+    }
     if (!result.image) throw new Error("AI ไม่ได้ส่งภาพที่แก้แล้วกลับมา");
 
     editorContext.selection = null;
@@ -604,8 +608,11 @@ applyAiEditButton.addEventListener("click", async () => {
     try {
         await applyPromptToCanvas(promptInput.value);
     } catch (error) {
-        alert(error.message);
-        setEditorStatus("แก้ไขไม่สำเร็จ");
+        const message = error.status === 429
+            ? "โควตา AI เต็ม กรุณารอสักครู่หรือเปิด billing ใน Google AI Studio"
+            : error.message;
+        alert(message);
+        setEditorStatus(error.status === 429 ? "รอโควตา AI" : "แก้ไขไม่สำเร็จ");
     } finally {
         applyAiEditButton.disabled = false;
     }

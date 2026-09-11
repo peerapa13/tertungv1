@@ -37,3 +37,5 @@ TertungV1 เป็นเว็บแก้ไขภาพ AI ที่ช่ว
 ปุ่ม `ใช้ AI แก้ภาพ` ใช้ Gemini Image API จริง (`gemini-2.5-flash-image`) ผ่าน `api/edit-image.js` ซึ่งต้อง deploy โปรเจกต์นี้กับ Vercel และตั้ง Environment Variable ชื่อ `GEMINI_API_KEY` ใน Vercel เท่านั้น ห้ามใส่ key ในไฟล์ frontend หรือ commit ลง GitHub
 
 หลัง deploy ให้ตั้งค่า `window.TERTUNG_API_URL` ใน `index.html` เป็น URL ของ Function เช่น `https://your-project.vercel.app/api/edit-image` แล้ว deploy หน้า GitHub Pages ใหม่
+
+หากพบข้อความ quota exceeded ต้องเปิดใช้ billing หรือรอโควตาตามบัญชี Google AI Studio เพราะ free tier ของโมเดลสร้างภาพอาจมีโควตาเป็นศูนย์ในบางโปรเจกต์
