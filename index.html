@@ -45,6 +45,44 @@
         </form>
     </div>
 
+    <main class="ai-editor" aria-labelledby="editor-title">
+        <div class="editor-heading">
+            <div>
+                <p class="eyebrow">AI IMAGE EDITOR</p>
+                <h2 id="editor-title">สั่งแก้ภาพด้วยพร็อมต์</h2>
+                <p class="editor-description">เลือกภาพ ลากกรอบบริเวณที่ต้องการ แล้วบอก AI ว่าอยากแก้ตรงไหน</p>
+            </div>
+            <span class="editor-status" id="editor-status">ยังไม่ได้เลือกภาพ</span>
+        </div>
+
+        <div class="editor-workspace">
+            <div class="canvas-panel">
+                <div class="canvas-toolbar">
+                    <span>พื้นที่แก้ไข</span>
+                    <button id="clear-selection" class="tool-btn" type="button">ล้างพื้นที่เลือก</button>
+                </div>
+                <div class="canvas-wrap" id="canvas-wrap">
+                    <canvas id="editor-canvas" aria-label="พื้นที่แสดงภาพและเลือกบริเวณแก้ไข"></canvas>
+                    <div class="canvas-empty" id="canvas-empty">อัปโหลดภาพแล้วคลิกภาพตัวอย่างเพื่อเริ่มแก้ไข</div>
+                </div>
+                <p class="selection-help">ลากบนภาพเพื่อเลือกเฉพาะบริเวณ หรือไม่เลือกเพื่อแก้ทั้งภาพ</p>
+            </div>
+
+            <aside class="prompt-panel">
+                <label for="ai-prompt">พร็อมต์แก้ไขภาพ</label>
+                <textarea id="ai-prompt" rows="5" placeholder="เช่น ทำให้ท้องฟ้าสว่างขึ้น&#10;หรือ ทำบริเวณที่เลือกให้เป็นขาวดำ"></textarea>
+                <div class="prompt-examples">
+                    <button type="button" class="prompt-chip" data-prompt="ทำให้ภาพสว่างและคมชัดขึ้น">สว่างและคมชัด</button>
+                    <button type="button" class="prompt-chip" data-prompt="ทำบริเวณที่เลือกให้เป็นขาวดำ">ขาวดำเฉพาะจุด</button>
+                    <button type="button" class="prompt-chip" data-prompt="เบลอบริเวณที่เลือก">เบลอเฉพาะจุด</button>
+                </div>
+                <button id="apply-ai-edit" class="edit-btn ai-btn" type="button">✦ ใช้ AI แก้ภาพ</button>
+                <button id="download-edited" class="download-btn" type="button" disabled>ดาวน์โหลดภาพที่แก้แล้ว</button>
+                <p class="editor-note">ระบบจะตีความคำสั่งในเครื่องเพื่อความเป็นส่วนตัว และไม่ส่งภาพออกจากอุปกรณ์</p>
+            </aside>
+        </div>
+    </main>
+
     <!-- โหลด removebg.js ก่อน script.js เพื่อให้ฟังก์ชันพร้อมใช้งาน -->
     <script src="./removebg.js"></script>
     <script src="./script.js"></script>

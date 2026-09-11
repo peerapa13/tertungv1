@@ -320,3 +320,215 @@ window.onload = function () {
         localStorage.setItem('popupShown', 'true');
     }
 };
+
+// ==================== AI prompt editor ====================
+const editorCanvas = document.getElementById("editor-canvas");
+const editorCanvasWrap = document.getElementById("canvas-wrap");
+const canvasEmpty = document.getElementById("canvas-empty");
+const editorStatus = document.getElementById("editor-status");
+const promptInput = document.getElementById("ai-prompt");
+const applyAiEditButton = document.getElementById("apply-ai-edit");
+const downloadEditedButton = document.getElementById("download-edited");
+const clearSelectionButton = document.getElementById("clear-selection");
+const editorContext = {
+    imageElement: null,
+    wrapper: null,
+    selection: null,
+    dragStart: null,
+    isDragging: false
+};
+
+function setEditorStatus(message) {
+    editorStatus.textContent = message;
+}
+
+function selectImageForEditing(wrapper) {
+    const image = wrapper.querySelector("img");
+    if (!image) return;
+
+    editorContext.wrapper = wrapper;
+    editorContext.imageElement = image;
+    editorContext.selection = null;
+    canvasEmpty.style.display = "none";
+    downloadEditedButton.disabled = false;
+    setEditorStatus("กำลังแก้: " + (image.alt || "ภาพที่เลือก"));
+
+    if (image.complete && image.naturalWidth) {
+        drawEditorCanvas();
+    } else {
+        image.addEventListener("load", drawEditorCanvas, { once: true });
+    }
+}
+
+function drawEditorCanvas() {
+    const image = editorContext.imageElement;
+    if (!image || !image.naturalWidth) return;
+
+    editorCanvas.width = image.naturalWidth;
+    editorCanvas.height = image.naturalHeight;
+    const context = editorCanvas.getContext("2d");
+    context.clearRect(0, 0, editorCanvas.width, editorCanvas.height);
+    context.drawImage(image, 0, 0);
+
+    if (editorContext.selection) {
+        const { x, y, width, height } = editorContext.selection;
+        context.save();
+        context.fillStyle = "rgba(86, 100, 232, .16)";
+        context.fillRect(x, y, width, height);
+        context.strokeStyle = "#5664e8";
+        context.lineWidth = Math.max(2, editorCanvas.width / 500);
+        context.setLineDash([10, 7]);
+        context.strokeRect(x, y, width, height);
+        context.restore();
+    }
+}
+
+function canvasPoint(event) {
+    const bounds = editorCanvas.getBoundingClientRect();
+    return {
+        x: Math.max(0, Math.min(editorCanvas.width, (event.clientX - bounds.left) * editorCanvas.width / bounds.width)),
+        y: Math.max(0, Math.min(editorCanvas.height, (event.clientY - bounds.top) * editorCanvas.height / bounds.height))
+    };
+}
+
+function updateSelection(start, end) {
+    editorContext.selection = {
+        x: Math.min(start.x, end.x),
+        y: Math.min(start.y, end.y),
+        width: Math.abs(end.x - start.x),
+        height: Math.abs(end.y - start.y)
+    };
+    drawEditorCanvas();
+}
+
+editorCanvas.addEventListener("pointerdown", event => {
+    if (!editorContext.imageElement) return;
+    editorContext.isDragging = true;
+    editorContext.dragStart = canvasPoint(event);
+    editorCanvas.setPointerCapture(event.pointerId);
+});
+
+editorCanvas.addEventListener("pointermove", event => {
+    if (!editorContext.isDragging) return;
+    updateSelection(editorContext.dragStart, canvasPoint(event));
+});
+
+editorCanvas.addEventListener("pointerup", event => {
+    if (!editorContext.isDragging) return;
+    editorContext.isDragging = false;
+    updateSelection(editorContext.dragStart, canvasPoint(event));
+    if (editorContext.selection.width < 4 || editorContext.selection.height < 4) {
+        editorContext.selection = null;
+        drawEditorCanvas();
+    }
+});
+
+uploadArea.addEventListener("click", event => {
+    const image = event.target.closest(".image-wrapper img");
+    if (image) selectImageForEditing(image.closest(".image-wrapper"));
+});
+
+clearSelectionButton.addEventListener("click", () => {
+    editorContext.selection = null;
+    drawEditorCanvas();
+    setEditorStatus(editorContext.imageElement ? "แก้ทั้งภาพ" : "ยังไม่ได้เลือกภาพ");
+});
+
+document.querySelectorAll(".prompt-chip").forEach(chip => {
+    chip.addEventListener("click", () => {
+        promptInput.value = chip.dataset.prompt;
+        promptInput.focus();
+    });
+});
+
+function getEditRegion() {
+    if (editorContext.selection) return editorContext.selection;
+    return { x: 0, y: 0, width: editorCanvas.width, height: editorCanvas.height };
+}
+
+function parsePrompt(prompt) {
+    const text = prompt.toLowerCase();
+    return {
+        grayscale: /ขาวดำ|ขาว-ดำ|black.?and.?white|grayscale/.test(text),
+        blur: /เบลอ|ละลาย|blur/.test(text),
+        brighten: /สว่าง|เพิ่มแสง|bright|exposure/.test(text),
+        darken: /มืด|ลดแสง|darken/.test(text),
+        sharpen: /คม|ชัด|sharpen|รายละเอียด/.test(text),
+        warm: /อุ่น|warm|ทอง/.test(text),
+        cool: /เย็น|cool|ฟ้า/.test(text),
+        sepia: /ซีเปีย|วินเทจ|sepia|vintage/.test(text)
+    };
+}
+
+function applyPromptToCanvas(prompt) {
+    const effects = parsePrompt(prompt);
+    const hasEffect = Object.values(effects).some(Boolean);
+    if (!hasEffect) {
+        throw new Error("ลองใช้คำว่า สว่าง, คมชัด, ขาวดำ, เบลอ, อุ่น, เย็น หรือวินเทจ");
+    }
+
+    const region = getEditRegion();
+    const source = document.createElement("canvas");
+    source.width = region.width;
+    source.height = region.height;
+    const sourceContext = source.getContext("2d");
+    sourceContext.filter = [
+        effects.grayscale ? "grayscale(1)" : "",
+        effects.brighten ? "brightness(1.25)" : "",
+        effects.darken ? "brightness(.75)" : "",
+        effects.warm ? "sepia(.35) saturate(1.3)" : "",
+        effects.cool ? "hue-rotate(15deg) saturate(.8)" : "",
+        effects.sepia ? "sepia(.8) contrast(1.05)" : "",
+        effects.sharpen ? "contrast(1.18) saturate(1.08)" : "",
+        effects.blur ? "blur(5px)" : ""
+    ].filter(Boolean).join(" ");
+    sourceContext.drawImage(editorCanvas, region.x, region.y, region.width, region.height, 0, 0, region.width, region.height);
+
+    const context = editorCanvas.getContext("2d");
+    context.clearRect(region.x, region.y, region.width, region.height);
+    context.drawImage(source, region.x, region.y);
+    editorContext.selection = null;
+    const editedData = editorCanvas.toDataURL("image/png");
+    editorContext.imageElement.addEventListener("load", drawEditorCanvas, { once: true });
+    editorContext.imageElement.src = editedData;
+    setEditorStatus("แก้ไขสำเร็จแล้ว — พิมพ์พร็อมต์ใหม่ได้");
+    saveEditedImage(editorContext.wrapper, editedData);
+}
+
+function saveEditedImage(wrapper, data) {
+    if (!db || !wrapper || !wrapper.dataset.id) return;
+    const storeName = db.objectStoreNames.contains("processedImages") ? "processedImages" : "images";
+    const transaction = db.transaction(storeName, "readwrite");
+    transaction.objectStore(storeName).put({ id: Number(wrapper.dataset.id), data });
+}
+
+applyAiEditButton.addEventListener("click", () => {
+    if (!editorContext.imageElement) {
+        alert("กรุณาอัปโหลดและเลือกภาพก่อน");
+        return;
+    }
+    if (!promptInput.value.trim()) {
+        alert("กรุณาพิมพ์พร็อมต์ เช่น ทำให้ภาพสว่างและคมชัดขึ้น");
+        promptInput.focus();
+        return;
+    }
+
+    applyAiEditButton.disabled = true;
+    setEditorStatus("AI กำลังตีความพร็อมต์...");
+    try {
+        applyPromptToCanvas(promptInput.value);
+    } catch (error) {
+        alert(error.message);
+        setEditorStatus("แก้ไขไม่สำเร็จ");
+    } finally {
+        applyAiEditButton.disabled = false;
+    }
+});
+
+downloadEditedButton.addEventListener("click", () => {
+    if (!editorContext.imageElement) return;
+    const link = document.createElement("a");
+    link.href = editorContext.imageElement.src;
+    link.download = "tertung-ai-edited.png";
+    link.click();
+});
