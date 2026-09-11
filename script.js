@@ -533,39 +533,47 @@ function parsePrompt(prompt) {
     };
 }
 
-function applyPromptToCanvas(prompt) {
-    const effects = parsePrompt(prompt);
-    const hasEffect = Object.values(effects).some(Boolean);
-    if (!hasEffect) {
-        throw new Error("ลองใช้คำว่า สว่าง, คมชัด, ขาวดำ, เบลอ, อุ่น, เย็น หรือวินเทจ");
+function createEditMask() {
+    if (!editorContext.selection) return null;
+    const mask = document.createElement("canvas");
+    mask.width = editorCanvas.width;
+    mask.height = editorCanvas.height;
+    const context = mask.getContext("2d");
+    context.fillStyle = "#fff";
+    context.fillRect(0, 0, mask.width, mask.height);
+    context.clearRect(
+        editorContext.selection.x,
+        editorContext.selection.y,
+        editorContext.selection.width,
+        editorContext.selection.height
+    );
+    return mask.toDataURL("image/png");
+}
+
+async function applyPromptToCanvas(prompt) {
+    const apiUrl = window.TERTUNG_API_URL || "/api/edit-image";
+    if (location.hostname.endsWith("github.io") && apiUrl.startsWith("/")) {
+        throw new Error("ต้องตั้งค่า URL ของ Vercel API ก่อนใช้งาน AI จริงบน GitHub Pages");
     }
 
-    const region = getEditRegion();
-    const source = document.createElement("canvas");
-    source.width = region.width;
-    source.height = region.height;
-    const sourceContext = source.getContext("2d");
-    sourceContext.filter = [
-        effects.grayscale ? "grayscale(1)" : "",
-        effects.brighten ? "brightness(1.25)" : "",
-        effects.darken ? "brightness(.75)" : "",
-        effects.warm ? "sepia(.35) saturate(1.3)" : "",
-        effects.cool ? "hue-rotate(15deg) saturate(.8)" : "",
-        effects.sepia ? "sepia(.8) contrast(1.05)" : "",
-        effects.sharpen ? "contrast(1.18) saturate(1.08)" : "",
-        effects.blur ? "blur(5px)" : ""
-    ].filter(Boolean).join(" ");
-    sourceContext.drawImage(editorCanvas, region.x, region.y, region.width, region.height, 0, 0, region.width, region.height);
+    const response = await fetch(apiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            image: editorCanvas.toDataURL("image/png"),
+            mask: createEditMask(),
+            prompt: prompt.trim()
+        })
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || "AI แก้ภาพไม่สำเร็จ");
+    if (!result.image) throw new Error("AI ไม่ได้ส่งภาพที่แก้แล้วกลับมา");
 
-    const context = editorCanvas.getContext("2d");
-    context.clearRect(region.x, region.y, region.width, region.height);
-    context.drawImage(source, region.x, region.y);
     editorContext.selection = null;
-    const editedData = editorCanvas.toDataURL("image/png");
     editorContext.imageElement.addEventListener("load", drawEditorCanvas, { once: true });
-    editorContext.imageElement.src = editedData;
-    setEditorStatus("แก้ไขสำเร็จแล้ว — พิมพ์พร็อมต์ใหม่ได้");
-    saveEditedImage(editorContext.wrapper, editedData);
+    editorContext.imageElement.src = result.image;
+    setEditorStatus("AI แก้ภาพสำเร็จแล้ว — พิมพ์พร็อมต์ใหม่ได้");
+    saveEditedImage(editorContext.wrapper, result.image);
 }
 
 function saveEditedImage(wrapper, data) {
@@ -575,7 +583,7 @@ function saveEditedImage(wrapper, data) {
     transaction.objectStore(storeName).put({ id: Number(wrapper.dataset.id), data });
 }
 
-applyAiEditButton.addEventListener("click", () => {
+applyAiEditButton.addEventListener("click", async () => {
     if (!editorContext.imageElement) {
         const firstImage = uploadArea.querySelector(".image-wrapper");
         if (firstImage) {
@@ -594,7 +602,7 @@ applyAiEditButton.addEventListener("click", () => {
     applyAiEditButton.disabled = true;
     setEditorStatus("AI กำลังตีความพร็อมต์...");
     try {
-        applyPromptToCanvas(promptInput.value);
+        await applyPromptToCanvas(promptInput.value);
     } catch (error) {
         alert(error.message);
         setEditorStatus("แก้ไขไม่สำเร็จ");
