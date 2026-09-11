@@ -3,9 +3,12 @@ body {
     background-size: cover;
     margin: 0;
     height: 100vh;
-    
+    overflow-x: hidden;
 }
 
+*, *::before, *::after {
+    box-sizing: border-box;
+}
 
   
 .W{
@@ -293,6 +296,7 @@ button:hover {
 }
 
 .ai-editor {
+    box-sizing: border-box;
     width: min(1180px, calc(100% - 32px));
     margin: 0 auto 56px;
     padding: 28px;
@@ -499,7 +503,6 @@ button:hover {
         min-height: 220px;
     }
 }
-
 
 
 

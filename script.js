@@ -116,7 +116,12 @@ function addImageToDOM(base64, id = null) {
     img.src = base64;
 
     img.addEventListener("click", () => {
-        previewImg.src = img.src; // ใช้ img.src ปัจจุบัน (อาจถูก update แล้ว)
+        if (typeof selectImageForEditing === "function") {
+            selectImageForEditing(wrapper);
+        }
+    });
+    img.addEventListener("dblclick", () => {
+        previewImg.src = img.src;
         previewOverlay.style.display = "flex";
     });
 
@@ -199,6 +204,17 @@ function loadImagesFromDB() {
     const request = store.getAll();
     request.onsuccess = () => {
         request.result.forEach(item => addImageToDOM(item.data, item.id));
+
+        if (!db.objectStoreNames.contains("processedImages")) return;
+        const processedTx = db.transaction("processedImages", "readonly");
+        const processedRequest = processedTx.objectStore("processedImages").getAll();
+        processedRequest.onsuccess = () => {
+            processedRequest.result.forEach(item => {
+                const wrapper = uploadArea.querySelector(`.image-wrapper[data-id="${item.id}"]`);
+                const image = wrapper?.querySelector("img");
+                if (image) image.src = item.data;
+            });
+        };
     };
 }
 
@@ -421,11 +437,6 @@ editorCanvas.addEventListener("pointerup", event => {
         editorContext.selection = null;
         drawEditorCanvas();
     }
-});
-
-uploadArea.addEventListener("click", event => {
-    const image = event.target.closest(".image-wrapper img");
-    if (image) selectImageForEditing(image.closest(".image-wrapper"));
 });
 
 clearSelectionButton.addEventListener("click", () => {

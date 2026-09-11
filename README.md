@@ -13,8 +13,8 @@ TertungV1 เป็นเว็บแก้ไขภาพ AI ที่ช่ว
 
 ## 🔧 **เทคโนโลยีที่ใช้**
 - **Frontend:** HTML, CSS, JavaScript
-- **AI Processing:** Cloudinary API (Remove Background, Enhance Image)
-- **Backend:** Serverless (ใช้ API เชื่อมกับ Cloudinary โดยตรง)
+- **AI Processing:** `@imgly/background-removal` ผ่าน ESM CDN และ Canvas fallback
+- **Storage:** IndexedDB ในเบราว์เซอร์ (ไม่ต้องมี backend หรือ API key)
 
 ## ✨ **วิธีการใช้งานโดยย่อ**
 1. คลิกที่ [https://peerapa13.github.io/tertungv1/](https://peerapa13.github.io/tertungv1/)

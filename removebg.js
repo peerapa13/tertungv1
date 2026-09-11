@@ -46,14 +46,16 @@ async function removeBackgroundFromAllImages(db, options = {}) {
  * รัน in-browser ผ่าน WebAssembly ไม่ต้องการ API key
  */
 async function _removeBgWithAI(imgEl) {
-    // โหลด library จาก CDN ถ้ายังไม่โหลด
-    if (!window.ImglyBackgroundRemoval) {
-        await _loadScript("https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/background-removal.js");
+    if (!window.__imglyRemoveBackgroundPromise) {
+        window.__imglyRemoveBackgroundPromise = import(
+            "https://esm.sh/@imgly/background-removal@1.4.5"
+        ).then(module => module.removeBackground);
     }
+    const removeBackground = await window.__imglyRemoveBackgroundPromise;
 
     // แปลง img element → Blob
     const blob = await _imgElToBlob(imgEl);
-    const resultBlob = await window.ImglyBackgroundRemoval.removeBackground(blob, {
+    const resultBlob = await removeBackground(blob, {
         model: "small", // "small" เร็วกว่า, "medium" แม่นกว่า
         output: { format: "image/png" }
     });
