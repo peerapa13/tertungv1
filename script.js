@@ -140,10 +140,22 @@ function addImageToDOM(base64, id = null) {
     delBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         const imgId = wrapper.dataset.id ? Number(wrapper.dataset.id) : null;
+        const wasSelected = editorContext.wrapper === wrapper;
         wrapper.remove();
         if (imgId) {
             deleteImageFromDB(imgId);
             deleteProcessedFromDB(imgId);
+        }
+        if (wasSelected) {
+            editorContext.wrapper = null;
+            editorContext.imageElement = null;
+            editorContext.selection = null;
+            editorCanvas.width = 300;
+            editorCanvas.height = 150;
+            editorCanvas.getContext("2d").clearRect(0, 0, 300, 150);
+            canvasEmpty.style.display = "block";
+            downloadEditedButton.disabled = true;
+            setEditorStatus("ยังไม่ได้เลือกภาพ");
         }
         updateUploadText();
     });
@@ -151,6 +163,9 @@ function addImageToDOM(base64, id = null) {
 
     uploadArea.appendChild(wrapper);
     updateUploadText();
+    if (!editorContext.imageElement) {
+        selectImageForEditing(wrapper);
+    }
 }
 
 // ==================== อัพโหลด + เซฟ DB ====================
@@ -213,6 +228,15 @@ document.getElementById("removeAll").addEventListener("click", () => {
         const tx2 = db.transaction("processedImages", "readwrite");
         tx2.objectStore("processedImages").clear();
     }
+    editorContext.wrapper = null;
+    editorContext.imageElement = null;
+    editorContext.selection = null;
+    editorCanvas.width = 300;
+    editorCanvas.height = 150;
+    editorCanvas.getContext("2d").clearRect(0, 0, 300, 150);
+    canvasEmpty.style.display = "block";
+    downloadEditedButton.disabled = true;
+    setEditorStatus("ยังไม่ได้เลือกภาพ");
 });
 
 // ==================== คลิกพื้นที่เพื่อเลือกไฟล์ ====================
@@ -553,8 +577,13 @@ function saveEditedImage(wrapper, data) {
 
 applyAiEditButton.addEventListener("click", () => {
     if (!editorContext.imageElement) {
-        alert("กรุณาอัปโหลดและเลือกภาพก่อน");
-        return;
+        const firstImage = uploadArea.querySelector(".image-wrapper");
+        if (firstImage) {
+            selectImageForEditing(firstImage);
+        } else {
+            alert("กรุณาอัปโหลดภาพก่อน");
+            return;
+        }
     }
     if (!promptInput.value.trim()) {
         alert("กรุณาพิมพ์พร็อมต์ เช่น ทำให้ภาพสว่างและคมชัดขึ้น");
