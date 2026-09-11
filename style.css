@@ -179,6 +179,35 @@ header {
     margin-top: 20px;
 }
 
+.upload-select-btn {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 10px 18px;
+    border-radius: 8px;
+    color: #fff;
+    background: #007bff;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.upload-select-btn:hover {
+    background: #0056b3;
+}
+
+.upload-drop-hint {
+    display: block;
+    width: 100%;
+    margin-top: 8px;
+    color: #778196;
+    font-size: 12px;
+}
+
+.upload-area.is-dragging {
+    border-color: #007bff;
+    background-color: #eef5ff;
+}
+
 .upload-input {
     display: none;
 }
@@ -503,7 +532,6 @@ button:hover {
         min-height: 220px;
     }
 }
-
 
 
 

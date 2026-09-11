@@ -59,6 +59,8 @@ const uploadText = document.getElementById("upload-text");
 function updateUploadText() {
     const hasImages = uploadArea.querySelectorAll(".image-wrapper").length > 0;
     uploadText.style.display = hasImages ? "none" : "block";
+    uploadArea.querySelector(".upload-select-btn").style.display = hasImages ? "none" : "inline-block";
+    uploadArea.querySelector(".upload-drop-hint").style.display = hasImages ? "none" : "block";
 }
 
 // ==================== IndexedDB ====================
@@ -152,21 +154,39 @@ function addImageToDOM(base64, id = null) {
 }
 
 // ==================== อัพโหลด + เซฟ DB ====================
-fileInput.addEventListener("change", e => {
-    Array.from(e.target.files).forEach(file => {
+function addFiles(files) {
+    const imageFiles = Array.from(files).filter(file => file.type.startsWith("image/"));
+    if (imageFiles.length === 0) {
+        alert("กรุณาเลือกไฟล์ภาพ เช่น JPG, PNG หรือ WEBP");
+        return;
+    }
+    if (!db) {
+        alert("กำลังเตรียมระบบจัดเก็บภาพ กรุณารอสักครู่แล้วลองใหม่");
+        return;
+    }
+
+    imageFiles.forEach(file => {
         const reader = new FileReader();
         reader.onload = event => {
             const base64 = event.target.result;
-            const tx = db.transaction("images", "readwrite");
-            const store = tx.objectStore("images");
-            const requestAdd = store.add({ data: base64 });
-            requestAdd.onsuccess = e => {
-                const id = e.target.result;
-                addImageToDOM(base64, id);
-            };
+            try {
+                const tx = db.transaction("images", "readwrite");
+                const requestAdd = tx.objectStore("images").add({ data: base64, name: file.name });
+                requestAdd.onsuccess = event => addImageToDOM(base64, event.target.result);
+                requestAdd.onerror = () => alert(`บันทึกไฟล์ ${file.name} ไม่สำเร็จ`);
+            } catch (error) {
+                console.error("image upload error:", error);
+                alert(`อัปโหลด ${file.name} ไม่สำเร็จ`);
+            }
         };
+        reader.onerror = () => alert(`อ่านไฟล์ ${file.name} ไม่สำเร็จ`);
         reader.readAsDataURL(file);
     });
+}
+
+fileInput.addEventListener("change", event => {
+    addFiles(event.target.files);
+    fileInput.value = "";
 });
 
 // ==================== ลบภาพจาก IndexedDB ====================
@@ -197,9 +217,22 @@ document.getElementById("removeAll").addEventListener("click", () => {
 
 // ==================== คลิกพื้นที่เพื่อเลือกไฟล์ ====================
 uploadArea.addEventListener("click", (e) => {
-    if (!e.target.closest(".image-wrapper") && !e.target.classList.contains("delete-btn")) {
+    if (!e.target.closest(".image-wrapper") && !e.target.closest("label")) {
         fileInput.click();
     }
+});
+
+uploadArea.addEventListener("dragover", event => {
+    event.preventDefault();
+    uploadArea.classList.add("is-dragging");
+});
+
+uploadArea.addEventListener("dragleave", () => uploadArea.classList.remove("is-dragging"));
+
+uploadArea.addEventListener("drop", event => {
+    event.preventDefault();
+    uploadArea.classList.remove("is-dragging");
+    addFiles(event.dataTransfer.files);
 });
 
 // ==================== โหลดภาพจาก IndexedDB ====================
