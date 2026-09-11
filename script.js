@@ -111,6 +111,11 @@ function addImageToDOM(base64, id = null) {
     const wrapper = document.createElement("div");
     wrapper.classList.add("image-wrapper");
     if (id) wrapper.dataset.id = id;
+    wrapper.addEventListener("click", event => {
+        if (!event.target.closest(".delete-btn") && typeof selectImageForEditing === "function") {
+            selectImageForEditing(wrapper);
+        }
+    });
 
     const img = document.createElement("img");
     img.src = base64;
